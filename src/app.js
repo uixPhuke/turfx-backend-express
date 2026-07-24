@@ -1,4 +1,7 @@
 const express = require("express");
+const errorHandler = require("./middlewares/notFound.middleware");
+const errorHandler = require("./middlewares/error.middleware");
+
 
 const app = express();
 
@@ -11,4 +14,6 @@ app.get("/", (req, res) => {
   });
 });
 
+app.use(notFound);
+app.use(errorHandler);
 module.exports = app;
