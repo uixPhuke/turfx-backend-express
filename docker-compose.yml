@@ -1,0 +1,124 @@
+version: "3.9"
+
+services:
+
+  # ==========================================
+  # TurfX Backend API
+  # ==========================================
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: turfx-backend
+
+    restart: unless-stopped
+
+    ports:
+      - "8000:8000"
+
+    env_file:
+      - .env
+
+    depends_on:
+      - mongodb
+      - redis
+
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+    networks:
+      - turfx-network
+
+  # ==========================================
+  # MongoDB
+  # ==========================================
+
+  mongodb:
+    image: mongo:8
+
+    container_name: turfx-mongodb
+
+    restart: unless-stopped
+
+    ports:
+      - "27017:27017"
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+
+    volumes:
+      - mongo-data:/data/db
+
+    networks:
+      - turfx-network
+
+  # ==========================================
+  # Redis
+  # ==========================================
+
+  redis:
+    image: redis:7-alpine
+
+    container_name: turfx-redis
+
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"
+
+    command: redis-server --appendonly yes
+
+    volumes:
+      - redis-data:/data
+
+    networks:
+      - turfx-network
+
+  # ==========================================
+  # BullMQ Worker
+  # ==========================================
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: turfx-worker
+
+    restart: unless-stopped
+
+    command: node src/workers/index.js
+
+    env_file:
+      - .env
+
+    depends_on:
+      - redis
+      - mongodb
+
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+    networks:
+      - turfx-network
+
+# ==========================================
+# Networks
+# ==========================================
+
+networks:
+  turfx-network:
+    driver: bridge
+
+# ==========================================
+# Volumes
+# ==========================================
+
+volumes:
+  mongo-data:
+  redis-data:

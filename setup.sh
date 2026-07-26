@@ -26,4 +26,4 @@ touch src/sockets/socket.js
 touch src/jobs/{bookingReminder.job.js,cleanupExpiredBookings.job.js}
 touch src/docs/swagger.js
 
-echo "✅ TurfX backend structure created successfully!"
+echo " TurfX backend structure created successfully!"
