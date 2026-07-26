@@ -1,19 +1,26 @@
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
 
-// Cloudinary Configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-/**
- * Upload Image Buffer to Cloudinary
- * @param {Buffer} buffer
- * @param {String} folder
- * @returns {Promise}
- */
+const verifyCloudinaryConnection = async () => {
+  try {
+    const result = await cloudinary.api.ping();
+
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("Cloudinary Connected Successfully");
+    console.log("Cloud Name :", process.env.CLOUDINARY_CLOUD_NAME);
+    console.log("Status     :", result.status);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+  } catch (error) {
+    console.error("Cloudinary Connection Error:", error.message);
+    throw error;
+  }
+};
 
 const uploadToCloudinary = (buffer, folder = "turfx") => {
   return new Promise((resolve, reject) => {
@@ -33,17 +40,13 @@ const uploadToCloudinary = (buffer, folder = "turfx") => {
   });
 };
 
-/**
- * Delete Image
- * @param {String} publicId
- */
-
 const deleteFromCloudinary = async (publicId) => {
-  return await cloudinary.uploader.destroy(publicId);
+  return cloudinary.uploader.destroy(publicId);
 };
 
 module.exports = {
   cloudinary,
+  verifyCloudinaryConnection,
   uploadToCloudinary,
   deleteFromCloudinary,
 };
