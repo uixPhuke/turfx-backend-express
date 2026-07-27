@@ -18,7 +18,7 @@ const {
   paginationValidation,
 } = require("./admin.validation");
 
-const auth = require("../../middlewares/auth.middleware");
+const auth = require("../../middlewares/adminAuth.middleware");
 const authorize = require("../../middlewares/role.middleware");
 const validate = require("../../middlewares/validation.middleware");
 
@@ -117,13 +117,7 @@ router.get(
   adminController.getAllAdmins
 );
 
-router.get(
-  "/:id",
-  authorize("super_admin"),
-  adminIdValidation,
-  validate,
-  adminController.getAdminById
-);
+
 
 router.patch(
   "/:id",
@@ -248,10 +242,6 @@ router.get(
   adminController.getRecentActivities
 );
 
-// ======================================================
-// Super Admin Monitoring
-// ======================================================
-
 router.get(
   "/audit-logs",
   authorize("super_admin"),
@@ -262,6 +252,18 @@ router.get(
   "/system-health",
   authorize("super_admin"),
   adminController.getSystemHealth
+);
+
+// ======================================================
+// Admin By ID (KEEP LAST)
+// ======================================================
+
+router.get(
+  "/:id",
+  authorize("super_admin"),
+  adminIdValidation,
+  validate,
+  adminController.getAdminById
 );
 
 module.exports = router;

@@ -647,69 +647,48 @@ const getPlatformAnalytics =
 // Audit Logs
 // ==========================================
 
-const getAuditLogs =
-  asyncHandler(
-    async (req, res) => {
+const getAuditLogs = asyncHandler(async (req, res) => {
+  const data = await adminService.getAuditLogs(req.query);
 
-      const logs =
-        await adminService.getAuditLogs(
-          req.query
-        );
-
-      return res.status(200).json(
-        new ApiResponse(
-          200,
-          logs,
-          "Audit logs fetched successfully"
-        )
-      );
-
-    }
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      data,
+      "Audit logs fetched successfully"
+    )
   );
-
+});
 // ==========================================
 // Recent Activities
 // ==========================================
 
-const getRecentActivities =
-  asyncHandler(
-    async (req, res) => {
+const getRecentActivities = asyncHandler(async (req, res) => {
+  const data = await adminService.getRecentActivities();
 
-      const activities =
-        await adminService.getRecentActivities();
-
-      return res.status(200).json(
-        new ApiResponse(
-          200,
-          activities,
-          "Recent activities fetched successfully"
-        )
-      );
-
-    }
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      data,
+      "Recent activities fetched successfully"
+    )
   );
+});
 
 // ==========================================
 // System Health
 // ==========================================
 
-const getSystemHealth =
-  asyncHandler(
-    async (req, res) => {
+const getSystemHealth = asyncHandler(async (req, res) => {
+  const data = await adminService.getSystemHealth();
 
-      const health =
-        await adminService.getSystemHealth();
-
-      return res.status(200).json(
-        new ApiResponse(
-          200,
-          health,
-          "System health fetched successfully"
-        )
-      );
-
-    }
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      data,
+      "System health fetched successfully"
+    )
   );
+});
 
 // ==========================================
 // Module Exports

@@ -352,32 +352,22 @@ adminSchema.virtual("isLocked").get(
 
 // Full Profile
 
-adminSchema.virtual("fullProfile").get(
-  function () {
+// Full Profile
 
-    return {
+adminSchema.virtual("fullProfile").get(function () {
+  const profile = this.profile || {};
 
-      id: this._id,
+  return {
+    id: this._id,
+    name: this.name,
+    email: this.email,
+    role: this.role,
 
-      name: this.name,
-
-      email: this.email,
-
-      role: this.role,
-
-      avatar:
-        this.profile.avatar,
-
-      designation:
-        this.profile.designation,
-
-      department:
-        this.profile.department,
-
-    };
-
-  }
-);
+    avatar: profile.avatar || "",
+    designation: profile.designation || "",
+    department: profile.department || "",
+  };
+});
 
 // ==========================================
 // Instance Methods
@@ -483,33 +473,20 @@ adminSchema.statics.findActiveByEmail =
 
 // Hash Password
 
-adminSchema.pre(
-  "save",
-  async function (next) {
+adminSchema.pre("save", async function () {
 
-    if (
-      !this.isModified(
-        "password"
-      )
-    ) {
-
-      return next();
-
-    }
-
-    const salt =
-      await bcrypt.genSalt(10);
-
-    this.password =
-      await bcrypt.hash(
-        this.password,
-        salt
-      );
-
-    next();
-
+  if (!this.isModified("password")) {
+    return;
   }
-);
+
+  const salt = await bcrypt.genSalt(10);
+
+  this.password = await bcrypt.hash(
+    this.password,
+    salt
+  );
+
+});
 
 // ==========================================
 // JSON Options
