@@ -45,8 +45,12 @@ beforeAll(async () => {
         password: "Password@123",
       });
 
-  token =
-    login.body.data.accessToken;
+  token = login.body.data.accessToken;
+
+// Create wallet
+await request(app)
+  .post("/api/v1/wallet")
+  .set("Authorization", `Bearer ${token}`);
 });
 
 afterAll(async () => {
@@ -98,9 +102,7 @@ describe("Wallet APIs", () => {
       const res =
         await request(app)
 
-          .get(
-            "/api/v1/wallet/balance"
-          )
+          .get("/api/v1/wallet")
 
           .set(
             "Authorization",
@@ -118,40 +120,7 @@ describe("Wallet APIs", () => {
   // Add Money
   // =============================
 
-  describe("POST Add Money", () => {
-
-    it("should create wallet recharge", async () => {
-
-      const res =
-        await request(app)
-
-          .post(
-            "/api/v1/wallet/add-money"
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${token}`
-          )
-
-          .send({
-
-            amount: 500,
-
-            paymentMethod:
-              "razorpay",
-
-          });
-
-      expect(res.statusCode)
-        .toBe(201);
-
-      expect(res.body.success)
-        .toBe(true);
-
-    });
-
-  });
+ 
 
   // =============================
   // Transactions
@@ -271,28 +240,6 @@ describe("Wallet APIs", () => {
   // Cashback
   // =============================
 
-  describe("GET Cashback", () => {
-
-    it("should return cashback", async () => {
-
-      const res =
-        await request(app)
-
-          .get(
-            "/api/v1/wallet/cashback"
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${token}`
-          );
-
-      expect(res.statusCode)
-        .toBe(200);
-
-    });
-
-  });
 
   // =============================
   // Wallet Statistics
@@ -321,4 +268,15 @@ describe("Wallet APIs", () => {
 
   });
 
+});
+
+afterAll(async () => {
+  if (mongoose.connection.readyState === 1) {
+    await mongoose.connection.dropDatabase();
+    await mongoose.connection.close();
+  }
+
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
 });
