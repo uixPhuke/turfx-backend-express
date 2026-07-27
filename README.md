@@ -23,23 +23,21 @@
 
 ------------------------------------------------------------------------
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-  Layer       Technology
-  ----------- --------------------
-  Runtime     Node.js
-  Framework   Express.js
-  Database    MongoDB + Mongoose
-  Cache       Redis
-  Queue       BullMQ
-  Realtime    Socket.IO
-  Storage     Cloudinary
-  Docs        Swagger
-  Testing     Jest + Supertest
-  Container   Docker
-  CI          GitHub Actions
-
-------------------------------------------------------------------------
+| | |
+|---|---|
+| **Runtime** | ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white) |
+| **Framework** | ![Express](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white) |
+| **Database** | ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white) |
+| **Cache** | ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white) |
+| **Queue** | ![BullMQ](https://img.shields.io/badge/BullMQ-FF6B35?style=for-the-badge) |
+| **Realtime** | ![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?style=for-the-badge&logo=socketdotio&logoColor=white) |
+| **Storage** | ![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white) |
+| **Documentation** | ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black) |
+| **Testing** | ![Jest](https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white) |
+| **Container** | ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white) |
+| **CI/CD** | ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white) |
 
 ## Project Structure
 
