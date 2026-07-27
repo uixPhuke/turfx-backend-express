@@ -56,17 +56,7 @@ const registerValidation = [
       "Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character."
     ),
 
-  body("confirmPassword")
-    .trim()
-    .notEmpty()
-    .withMessage("Confirm password is required")
-    .bail()
-    .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error("Passwords do not match");
-      }
-      return true;
-    }),
+
 ];
 
 /**
@@ -163,17 +153,7 @@ const resetPasswordValidation = [
       "Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character."
     ),
 
-  body("confirmPassword")
-    .trim()
-    .notEmpty()
-    .withMessage("Confirm password is required")
-    .bail()
-    .custom((value, { req }) => {
-      if (value !== req.body.newPassword) {
-        throw new Error("Passwords do not match");
-      }
-      return true;
-    }),
+  
 ];
 
 /**
@@ -197,17 +177,7 @@ const changePasswordValidation = [
       "Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character."
     ),
 
-  body("confirmPassword")
-    .trim()
-    .notEmpty()
-    .withMessage("Confirm password is required")
-    .bail()
-    .custom((value, { req }) => {
-      if (value !== req.body.newPassword) {
-        throw new Error("Passwords do not match");
-      }
-      return true;
-    }),
+
 ];
 /**
  * ==============================

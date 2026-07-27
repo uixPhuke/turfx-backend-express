@@ -26,34 +26,34 @@ const {
 // ==========================================
 // Public Routes
 // ==========================================
-console.log({
-  authLimiter: typeof authLimiter,
-  otpLimiter: typeof otpLimiter,
-  passwordLimiter: typeof passwordLimiter,
+// console.log({
+//   authLimiter: typeof authLimiter,
+//   otpLimiter: typeof otpLimiter,
+//   passwordLimiter: typeof passwordLimiter,
 
-  registerValidation: typeof registerValidation,
-  loginValidation: typeof loginValidation,
-  forgotPasswordValidation: typeof forgotPasswordValidation,
-  verifyOtpValidation: typeof verifyOtpValidation,
-  resetPasswordValidation: typeof resetPasswordValidation,
-  changePasswordValidation: typeof changePasswordValidation,
-  resendVerificationValidation: typeof resendVerificationValidation,
+//   registerValidation: typeof registerValidation,
+//   loginValidation: typeof loginValidation,
+//   forgotPasswordValidation: typeof forgotPasswordValidation,
+//   verifyOtpValidation: typeof verifyOtpValidation,
+//   resetPasswordValidation: typeof resetPasswordValidation,
+//   changePasswordValidation: typeof changePasswordValidation,
+//   resendVerificationValidation: typeof resendVerificationValidation,
 
-  validate: typeof validate,
-  authMiddleware: typeof authMiddleware,
+//   validate: typeof validate,
+//   authMiddleware: typeof authMiddleware,
 
-  register: typeof authController.register,
-  login: typeof authController.login,
-  refreshToken: typeof authController.refreshToken,
-  forgotPassword: typeof authController.forgotPassword,
-  verifyOtp: typeof authController.verifyOtp,
-  resetPassword: typeof authController.resetPassword,
-  verifyEmail: typeof authController.verifyEmail,
-  resendVerificationEmail: typeof authController.resendVerificationEmail,
-  getCurrentUser: typeof authController.getCurrentUser,
-  logout: typeof authController.logout,
-  changePassword: typeof authController.changePassword,
-});
+//   register: typeof authController.register,
+//   login: typeof authController.login,
+//   refreshToken: typeof authController.refreshToken,
+//   forgotPassword: typeof authController.forgotPassword,
+//   verifyOtp: typeof authController.verifyOtp,
+//   resetPassword: typeof authController.resetPassword,
+//   verifyEmail: typeof authController.verifyEmail,
+//   resendVerificationEmail: typeof authController.resendVerificationEmail,
+//   getCurrentUser: typeof authController.getCurrentUser,
+//   logout: typeof authController.logout,
+//   changePassword: typeof authController.changePassword,
+// });
 // Register
 router.post(
   "/register",
