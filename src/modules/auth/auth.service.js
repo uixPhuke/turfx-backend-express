@@ -1,42 +1,27 @@
 const jwt = require("jsonwebtoken");
 const User = require("../user/user.model");
 const Otp = require("./otp.model");
+const ApiError = require("../../utils/ApiError");
 
-const sendEmail = require("../../utils/sendEmail");
+const { sendEmail } = require("../../utils/sendEmail");
 const { generateOTP, getOTPExpiry } = require("../../utils/generateOTP");
 
 // ==========================================
 // Generate Access Token
 // ==========================================
+// console.log({
+//   JWT_SECRET: process.env.JWT_SECRET,
+//   JWT_EXPIRE: process.env.JWT_EXPIRE,
+//   REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
+//   REFRESH_TOKEN_EXPIRE: process.env.REFRESH_TOKEN_EXPIRE,
+// });
+const {
+  generateAccessToken,
+  generateRefreshToken,
+} = require("../../utils/generateToken");
 
-const generateAccessToken = (user) => {
-  return jwt.sign(
-    {
-      id: user._id,
-      role: user.role,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: process.env.JWT_EXPIRE,
-    }
-  );
-};
 
-// ==========================================
-// Generate Refresh Token
-// ==========================================
 
-const generateRefreshToken = (user) => {
-  return jwt.sign(
-    {
-      id: user._id,
-    },
-    process.env.REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRE,
-    }
-  );
-};
 
 // ==========================================
 // Register
@@ -58,21 +43,29 @@ const register = async (data) => {
   });
 
   if (existingUser) {
-    throw new Error("User already exists");
+    throw new ApiError(409, "User already exists");
   }
 
   const user = await User.create({
-    name,
-    email,
-    phone,
-    password,
-  });
+  name,
+  email,
+  phone,
+  password,
+});
 
-  const accessToken = generateAccessToken(user);
-  const refreshToken = generateRefreshToken(user);
+// Generate Tokens
+const accessToken = generateAccessToken({
+  id: user._id,
+  role: user.role,
+});
 
-  user.refreshToken = refreshToken;
-  await user.save();
+const refreshToken = generateRefreshToken({
+  id: user._id,
+});
+
+// Save refresh token
+user.refreshToken = refreshToken;
+await user.save();
 
   // Delete previous OTP
   await Otp.deleteMany({
@@ -125,17 +118,17 @@ const login = async (
     email,
   }).select("+password +refreshToken");
 
-  if (!user) {
-    throw new Error(
-      "Invalid email or password"
-    );
-  }
 
-  if (user.isBlocked) {
-    throw new Error(
-      "Your account has been blocked"
-    );
-  }
+
+ 
+if (!user) {
+  throw new ApiError(401, "Invalid email or password");
+}
+
+if (user.isBlocked) {
+  throw new ApiError(403, "Your account has been blocked");
+}
+
 
   const isMatch =
     await user.comparePassword(
@@ -143,18 +136,18 @@ const login = async (
     );
 
   if (!isMatch) {
-    throw new Error(
-      "Invalid email or password"
-    );
-  }
-
+  throw new ApiError(401, "Invalid email or password");
+}
   user.lastLogin = new Date();
 
-  const accessToken =
-    generateAccessToken(user);
+  const accessToken = generateAccessToken({
+  id: user._id,
+  role: user.role,
+});
 
-  const refreshToken =
-    generateRefreshToken(user);
+const refreshToken = generateRefreshToken({
+  id: user._id,
+});
 
   user.refreshToken =
     refreshToken;
@@ -226,11 +219,11 @@ const refreshAccessToken =
     }
 
     return {
-      accessToken:
-        generateAccessToken(
-          user
-        ),
-    };
+  accessToken: generateAccessToken({
+    id: user._id,
+    role: user.role,
+  }),
+};
   };
 
 // ==========================================
