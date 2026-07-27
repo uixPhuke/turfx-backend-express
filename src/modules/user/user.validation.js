@@ -81,6 +81,26 @@ const userIdValidation = [
     .withMessage("Invalid user id"),
 ];
 
+
+// ==========================================
+// Change Password
+// ==========================================
+
+const changePasswordValidation = [
+
+  body("currentPassword")
+    .trim()
+    .notEmpty()
+    .withMessage("Current password is required"),
+
+  body("newPassword")
+    .trim()
+    .notEmpty()
+    .withMessage("New password is required")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters"),
+
+];
 // ==========================================
 // Change Role
 // ==========================================
@@ -147,6 +167,26 @@ const restoreUserValidation = [
     .isMongoId()
     .withMessage("Invalid user id"),
 ];
+// ==========================================
+// Apply Owner
+// ==========================================
+
+const applyOwnerValidation = [
+
+  body("businessName")
+    .trim()
+    .notEmpty()
+    .withMessage("Business name is required"),
+
+  body("gstNumber")
+    .optional()
+    .trim(),
+
+  body("panNumber")
+    .optional()
+    .trim(),
+
+];
 
 // ==========================================
 // Permanent Delete User
@@ -169,10 +209,12 @@ module.exports = {
 
   blockUserValidation,
   unblockUserValidation,
+  applyOwnerValidation,
 
   approveOwnerValidation,
   rejectOwnerValidation,
 
   restoreUserValidation,
   permanentDeleteValidation,
+   changePasswordValidation,
 };

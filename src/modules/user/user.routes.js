@@ -6,6 +6,8 @@ const userController = require("./user.controller");
 
 const {
   updateProfileValidation,
+    changePasswordValidation,
+applyOwnerValidation,
   updateAvatarValidation,
   deleteAccountValidation,
   userIdValidation,
@@ -152,6 +154,25 @@ router.delete(
   permanentDeleteValidation,
   validate,
   userController.permanentlyDeleteUser
+);
+router.patch(
+    "/change-password",
+    authMiddleware,
+    changePasswordValidation,
+    validate,
+    userController.changePassword
+);
+router.post(
+    "/owner/apply",
+    authMiddleware,
+    applyOwnerValidation,
+    validate,
+    userController.applyForOwner
+);
+router.get(
+    "/owner/status",
+    authMiddleware,
+    userController.getOwnerStatus
 );
 
 module.exports = router;

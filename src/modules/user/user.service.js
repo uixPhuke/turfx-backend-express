@@ -82,6 +82,41 @@ const updateProfile = async (userId, data) => {
 
   return user;
 };
+
+const applyForOwner = async (userId,data)=>{
+
+    const user = await User.findById(userId);
+
+    if(!user)
+        throw new ApiError(404,"User not found");
+
+    user.role="owner";
+
+    user.ownerDetails={
+        businessName:data.businessName,
+        gstNumber:data.gstNumber,
+        panNumber:data.panNumber,
+        isApproved:false
+    };
+
+    await user.save();
+
+    return user;
+}
+
+const getOwnerStatus = async(userId)=>{
+
+    const user = await User.findById(userId);
+
+    if(!user)
+        throw new ApiError(404,"User not found");
+
+    return {
+        role:user.role,
+        approved:user.ownerDetails.isApproved,
+        ownerDetails:user.ownerDetails
+    };
+}
 // ==========================================
 // Update Avatar
 // ==========================================

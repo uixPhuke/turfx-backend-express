@@ -223,6 +223,35 @@ const restoreDeletedUser = asyncHandler(async (req, res) => {
   );
 });
 
+const authService = require("../auth/auth.service");
+
+const changePassword = asyncHandler(async (req,res)=>{
+
+    const result = await authService.changePassword(
+        req.user._id,
+        req.body.currentPassword,
+        req.body.newPassword
+    );
+
+    res.status(200).json(
+        new ApiResponse(200,result,"Password changed successfully")
+    );
+
+});
+const applyForOwner = asyncHandler(async (req, res) => {
+    const owner = await userService.applyForOwner(
+        req.user._id,
+        req.body
+    );
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            owner,
+            "Owner application submitted successfully"
+        )
+    );
+});
 // ==========================================
 // Permanently Delete User
 // ==========================================
@@ -241,13 +270,28 @@ const permanentlyDeleteUser = asyncHandler(async (req, res) => {
     )
   );
 });
+const getOwnerStatus = asyncHandler(async(req,res)=>{
 
+    const status=await userService.getOwnerStatus(req.user._id);
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            status,
+            "Owner status fetched"
+        )
+    );
+
+});     
 module.exports = {
   // User
   getMyProfile,
   updateProfile,
   updateAvatar,
   deleteAccount,
+  changePassword,
+  applyForOwner,
+  getOwnerStatus,
 
   // Admin
   getUserById,
