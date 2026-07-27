@@ -36,11 +36,6 @@ beforeAll(async () => {
     login.body.data.accessToken;
 });
 
-afterAll(async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
-  await mongoServer.stop();
-});
 
 describe("User APIs", () => {
 
@@ -54,7 +49,7 @@ describe("User APIs", () => {
 
       const res = await request(app)
 
-        .get("/api/v1/users/me")
+        .get("/api/v1/users/profile")
 
         .set(
           "Authorization",
@@ -82,7 +77,7 @@ describe("User APIs", () => {
 
       const res = await request(app)
 
-        .patch("/api/v1/users/profile")
+      .patch("/api/v1/users/update-profile")
 
         .set(
           "Authorization",
@@ -257,4 +252,13 @@ describe("User APIs", () => {
 
   });
 
+});
+
+afterAll(async () => {
+  await mongoose.connection.dropDatabase();
+  await mongoose.connection.close();
+
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
 });
