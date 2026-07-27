@@ -449,14 +449,11 @@ turfSchema.set("toObject", {
 // ==========================================
 
 // Hide deleted turfs automatically
-turfSchema.pre(/^find/, function (next) {
-  this.find({
+turfSchema.pre(/^find/, function () {
+  this.where({
     isDeleted: false,
   });
-
-  next();
 });
-
 // ==========================================
 // Instance Method
 // ==========================================

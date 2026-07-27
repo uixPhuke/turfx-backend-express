@@ -58,11 +58,19 @@ router.post(
   auth,
   authorize("owner"),
   upload.array("images", 10),
+
+  // Convert multipart sports field into an array
+  (req, res, next) => {
+    if (req.body.sports && !Array.isArray(req.body.sports)) {
+      req.body.sports = [req.body.sports];
+    }
+    next();
+  },
+
   createTurfValidation,
   validate,
   turfController.createTurf
 );
-
 // Get My Turfs
 router.get(
   "/mine",
