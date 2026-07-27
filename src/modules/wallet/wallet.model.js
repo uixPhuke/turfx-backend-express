@@ -432,28 +432,15 @@ walletSchema.statics.getOrCreateWallet =
 // Middleware
 // ==========================================
 
-walletSchema.pre(
-  "save",
-  function (next) {
-
-    if (this.balance < 0) {
-
-      this.balance = 0;
-
-    }
-
-    if (
-      this.frozenBalance < 0
-    ) {
-
-      this.frozenBalance = 0;
-
-    }
-
-    next();
-
+walletSchema.pre("save", function () {
+  if (this.balance < 0) {
+    this.balance = 0;
   }
-);
+
+  if (this.frozenBalance < 0) {
+    this.frozenBalance = 0;
+  }
+});
 
 // ==========================================
 // JSON Options
