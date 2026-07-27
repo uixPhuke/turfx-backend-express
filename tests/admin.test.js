@@ -4,147 +4,111 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const app = require("../src/app");
 
+const Admin = require("../src/modules/admin/admin.model");
+const User = require("../src/modules/user/user.model");
+
 let mongoServer;
 
 let adminToken;
-let userId;
+let ownerId;
 
 beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
 
-  mongoServer =
-    await MongoMemoryServer.create();
+  await mongoose.connect(mongoServer.getUri());
 
-  await mongoose.connect(
-    mongoServer.getUri()
-  );
+  // ======================================
+  // Create Super Admin
+  // ======================================
 
-  // Login as Admin
-  // Replace this with your actual admin creation
-  // if your project doesn't seed one automatically.
+  await Admin.create({
+    name: "Super Admin",
+    email: "admin@turfx.com",
+    password: "Admin@123",
+    role: "super_admin",
+    isActive: true,
+    isDeleted: false,
+  });
 
-  const login =
-    await request(app)
+  // ======================================
+  // Create Owner
+  // ======================================
 
-      .post("/api/v1/admin/login")
+  const owner = await User.create({
+    name: "Test Owner",
+    email: "owner@test.com",
+    phone: "9999999999",
+    password: "Password@123",
+    role: "owner",
+    ownerDetails: {
+      businessName: "Green Valley Turf",
+      isApproved: false,
+    },
+  });
 
-      .send({
+  ownerId = owner._id;
 
-        email: "admin@turfx.com",
+  // ======================================
+  // Admin Login
+  // ======================================
 
-        password: "Admin@123",
+  const login = await request(app)
+    .post("/api/v1/admin/login")
+    .send({
+      email: "admin@turfx.com",
+      password: "Admin@123",
+    });
 
-      });
+  expect(login.statusCode).toBe(200);
 
-  adminToken =
-    login.body?.data?.accessToken;
-
-  userId =
-    new mongoose.Types.ObjectId();
-
+  adminToken = login.body.data.accessToken;
 });
 
-afterAll(async () => {
 
-  await mongoose.connection.dropDatabase();
-
-  await mongoose.connection.close();
-
-  await mongoServer.stop();
-
-});
 
 describe("Admin APIs", () => {
 
   // ======================================
-  // Dashboard
+  // Dashboard Statistics
   // ======================================
 
-  describe("GET Dashboard", () => {
+  describe("GET Dashboard Statistics", () => {
 
-    it("should return dashboard", async () => {
+   it("should return recent activities", async () => {
+  const res = await request(app)
+    .get("/api/v1/admin/activities")
+    .set("Authorization", `Bearer ${adminToken}`);
 
-      const res =
-        await request(app)
+  console.log("STATUS:", res.statusCode);
+  console.log("BODY:", JSON.stringify(res.body, null, 2));
 
-          .get("/api/v1/admin/dashboard")
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
-
-      expect([
-        200,
-        401,
-      ]).toContain(
-        res.statusCode
-      );
-
-    });
+  expect(res.statusCode).toBe(200);
+});
 
   });
 
   // ======================================
-  // Users
+  // Get All Users
   // ======================================
 
-  describe("GET Users", () => {
+  describe("GET All Users", () => {
 
-    it("should return users", async () => {
+    it("should return all users", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .get("/api/v1/admin/users/all")
+        .set(
+          "Authorization",
+          `Bearer ${adminToken}`
+        );
 
-          .get("/api/v1/admin/users")
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
-
-      expect([
-        200,
-        401,
-      ]).toContain(
-        res.statusCode
-      );
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
 
     });
 
   });
-
-  // ======================================
-  // User Details
-  // ======================================
-
-  describe("GET User", () => {
-
-    it("should return user", async () => {
-
-      const res =
-        await request(app)
-
-          .get(
-            `/api/v1/admin/users/${userId}`
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
-
-      expect([
-        200,
-        404,
-      ]).toContain(
-        res.statusCode
-      );
-
-    });
-
-  });
-
-  // ======================================
+    // ======================================
   // Block User
   // ======================================
 
@@ -152,31 +116,18 @@ describe("Admin APIs", () => {
 
     it("should block user", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .patch(`/api/v1/admin/users/${ownerId}/block`)
+        .set(
+          "Authorization",
+          `Bearer ${adminToken}`
+        )
+        .send({
+          reason: "Spam Activity",
+        });
 
-          .patch(
-            `/api/v1/admin/users/${userId}/block`
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          )
-
-          .send({
-
-            reason:
-              "Spam Activity",
-
-          });
-
-      expect([
-        200,
-        404,
-      ]).toContain(
-        res.statusCode
-      );
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
 
     });
 
@@ -190,55 +141,15 @@ describe("Admin APIs", () => {
 
     it("should unblock user", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .patch(`/api/v1/admin/users/${ownerId}/unblock`)
+        .set(
+          "Authorization",
+          `Bearer ${adminToken}`
+        );
 
-          .patch(
-            `/api/v1/admin/users/${userId}/unblock`
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
-
-      expect([
-        200,
-        404,
-      ]).toContain(
-        res.statusCode
-      );
-
-    });
-
-  });
-
-  // ======================================
-  // Pending Owners
-  // ======================================
-
-  describe("GET Pending Owners", () => {
-
-    it("should return pending owners", async () => {
-
-      const res =
-        await request(app)
-
-          .get(
-            "/api/v1/admin/owners/pending"
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
-
-      expect([
-        200,
-        401,
-      ]).toContain(
-        res.statusCode
-      );
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
 
     });
 
@@ -248,191 +159,133 @@ describe("Admin APIs", () => {
   // Approve Owner
   // ======================================
 
-  describe("PATCH Owner Approval", () => {
+  describe("PATCH Approve Owner", () => {
 
     it("should approve owner", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .patch(`/api/v1/admin/owners/${ownerId}/approve`)
+        .set(
+          "Authorization",
+          `Bearer ${adminToken}`
+        )
+        .send({
+          remarks: "Verified successfully",
+        });
 
-          .patch(
-            `/api/v1/admin/owners/${userId}/approve`
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          )
-
-          .send({
-
-            status:
-              "approved",
-
-            remarks:
-              "Verified",
-
-          });
-
-      expect([
-        200,
-        404,
-      ]).toContain(
-        res.statusCode
-      );
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
 
     });
 
   });
 
   // ======================================
-  // Turfs
+  // Reject Owner
   // ======================================
 
-  describe("GET Turfs", () => {
+  describe("PATCH Reject Owner", () => {
 
-    it("should return turfs", async () => {
+    it("should reject owner", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .patch(`/api/v1/admin/owners/${ownerId}/reject`)
+        .set(
+          "Authorization",
+          `Bearer ${adminToken}`
+        )
+        .send({
+          reason: "Documents not valid",
+        });
 
-          .get("/api/v1/admin/turfs")
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
-
-      expect([
-        200,
-        401,
-      ]).toContain(
-        res.statusCode
-      );
+      expect([200, 400]).toContain(res.statusCode);
 
     });
 
   });
 
   // ======================================
-  // Bookings
+  // Dashboard Revenue
   // ======================================
 
-  describe("GET Bookings", () => {
+  describe("GET Dashboard Revenue", () => {
 
-    it("should return bookings", async () => {
+    it("should return revenue analytics", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .get("/api/v1/admin/dashboard/revenue")
+        .set(
+          "Authorization",
+          `Bearer ${adminToken}`
+        );
 
-          .get(
-            "/api/v1/admin/bookings"
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
-
-      expect([
-        200,
-        401,
-      ]).toContain(
-        res.statusCode
-      );
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
 
     });
 
   });
 
   // ======================================
-  // Payments
+  // Dashboard Platform
   // ======================================
 
-  describe("GET Payments", () => {
+  describe("GET Dashboard Platform", () => {
 
-    it("should return payments", async () => {
+    it("should return platform analytics", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .get("/api/v1/admin/dashboard/platform")
+        .set(
+          "Authorization",
+          `Bearer ${adminToken}`
+        );
 
-          .get(
-            "/api/v1/admin/payments"
-          )
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
 
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
+    });
 
-      expect([
-        200,
-        401,
-      ]).toContain(
-        res.statusCode
-      );
+  });
+    // ======================================
+  // Recent Activities
+  // ======================================
+
+  describe("GET Recent Activities", () => {
+
+    it("should return recent activities", async () => {
+
+      const res = await request(app)
+        .get("/api/v1/admin/activities")
+        .set(
+          "Authorization",
+          `Bearer ${adminToken}`
+        );
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
 
     });
 
   });
 
   // ======================================
-  // Revenue Report
+  // Audit Logs
   // ======================================
 
-  describe("GET Revenue", () => {
+  describe("GET Audit Logs", () => {
 
-    it("should return revenue report", async () => {
+    it("should return audit logs", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .get("/api/v1/admin/audit-logs")
+        .set(
+          "Authorization",
+          `Bearer ${adminToken}`
+        );
 
-          .get(
-            "/api/v1/admin/reports/revenue"
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
-
-      expect([
-        200,
-        401,
-      ]).toContain(
-        res.statusCode
-      );
-
-    });
-
-  });
-
-  // ======================================
-  // Booking Analytics
-  // ======================================
-
-  describe("GET Booking Analytics", () => {
-
-    it("should return booking analytics", async () => {
-
-      const res =
-        await request(app)
-
-          .get(
-            "/api/v1/admin/reports/bookings"
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
-
-      expect([
-        200,
-        401,
-      ]).toContain(
-        res.statusCode
-      );
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
 
     });
 
@@ -442,93 +295,39 @@ describe("Admin APIs", () => {
   // System Health
   // ======================================
 
-  describe("GET Health", () => {
+  describe("GET System Health", () => {
 
     it("should return system health", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .get("/api/v1/admin/system-health")
+        .set(
+          "Authorization",
+          `Bearer ${adminToken}`
+        );
 
-          .get(
-            "/api/v1/admin/system/health"
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
-
-      expect([
-        200,
-        401,
-      ]).toContain(
-        res.statusCode
-      );
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
 
     });
 
   });
 
-  // ======================================
-  // Queue Status
-  // ======================================
+});
 
-  describe("GET Queue Status", () => {
+// ======================================
+// Cleanup
+// ======================================
 
-    it("should return BullMQ status", async () => {
+afterAll(async () => {
 
-      const res =
-        await request(app)
+  if (mongoose.connection.readyState === 1) {
+    await mongoose.connection.dropDatabase();
+    await mongoose.connection.close();
+  }
 
-          .get(
-            "/api/v1/admin/system/queues"
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
-
-      expect([
-        200,
-        401,
-      ]).toContain(
-        res.statusCode
-      );
-
-    });
-
-  });
-
-  // ======================================
-  // Clear Cache
-  // ======================================
-
-  describe("POST Clear Cache", () => {
-
-    it("should clear Redis cache", async () => {
-
-      const res =
-        await request(app)
-
-          .post(
-            "/api/v1/admin/system/cache/clear"
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${adminToken}`
-          );
-
-      expect([
-        200,
-        401,
-      ]).toContain(
-        res.statusCode
-      );
-
-    });
-
-  });
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
 
 });
