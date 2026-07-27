@@ -2,6 +2,7 @@ const express = require("express");
 
 // Create Express App
 const app = express();
+const path = require("path");
 
 // ==============================
 // Middlewares
@@ -39,7 +40,11 @@ const errorHandler = require("./middlewares/error.middleware");
 // ==============================
 // Security Middlewares
 // ==============================
-
+app.use(
+  express.static(
+    path.join(__dirname, "../public")
+  )
+);
 app.disable("x-powered-by");
 
 app.use(requestLogger);

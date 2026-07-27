@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>TurfX Backend API</title>
+
+  <meta
+    name="description"
+    content="Production Ready Football Turf Booking Backend API"
+  />
+
+  <!-- Font -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Icons -->
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+  />
+
+  <!-- AOS -->
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/aos@2.3.4/dist/aos.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  />
+
+</head>
+
+<body>
+
+<div class="background-grid"></div>
+
+<div class="gradient gradient-1"></div>
+<div class="gradient gradient-2"></div>
+
+<!-- ========================================= -->
+<!-- Navbar -->
+<!-- ========================================= -->
+
+<header>
+
+<nav class="navbar">
+
+<div class="logo">
+
+<i class="fa-solid fa-futbol"></i>
+
+<span>TurfX API</span>
+
+</div>
+
+<div class="nav-links">
+
+<a href="#features">Features</a>
+
+<a href="#modules">Modules</a>
+
+<a href="#stack">Tech Stack</a>
+
+<a href="#architecture">Architecture</a>
+
+<a href="/api" target="_blank">
+Swagger
+</a>
+
+</div>
+
+</nav>
+
+</header>
+
+<!-- ========================================= -->
+<!-- Hero -->
+<!-- ========================================= -->
+
+<section class="hero">
+
+<div class="hero-content">
+
+<span class="badge">
+
+<i class="fa-solid fa-circle-check"></i>
+
+Production Ready Backend
+
+</span>
+
+<h1>
+
+Modern
+
+<span>
+
+Football Turf Booking
+
+</span>
+
+Backend API
+
+</h1>
+
+<p>
+
+Enterprise-grade REST API built with
+
+Node.js, Express, MongoDB, Redis,
+
+BullMQ, Socket.IO and Docker.
+
+Designed for scalability,
+
+performance and production deployment.
+
+</p>
+
+<div class="hero-buttons">
+
+<a
+href="/api/docs/"
+class="btn btn-primary"
+target="_blank"
+>
+
+<i class="fa-solid fa-book"></i>
+
+API Documentation
+
+</a>
+
+<a
+href="/api/v1/health"
+class="btn btn-outline"
+target="_blank"
+>
+
+<i class="fa-solid fa-heart-pulse"></i>
+
+Health Check
+
+</a>
+
+<a
+href="https://github.com/uixPhuke/turfx-backend-express"
+class="btn btn-outline"
+target="_blank"
+>
+
+<i class="fa-brands fa-github"></i>
+
+GitHub
+
+</a>
+
+</div>
+
+<div class="hero-stats">
+
+<div class="stat-card">
+
+<h2>69+</h2>
+
+<p>Passing Tests</p>
+
+</div>
+
+<div class="stat-card">
+
+<h2>10+</h2>
+
+<p>Core Modules</p>
+
+</div>
+
+<div class="stat-card">
+
+<h2>50+</h2>
+
+<p>REST APIs</p>
+
+</div>
+
+<div class="stat-card">
+
+<h2>100%</h2>
+
+<p>Docker Ready</p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ========================================= -->
+<!-- Live Status -->
+<!-- ========================================= -->
+
+<section class="status">
+
+<div class="container">
+
+<div class="section-title">
+
+<h2>Live System Status</h2>
+
+<p>
+
+Current production deployment
+
+</p>
+
+</div>
+
+<div class="status-grid">
+
+<div class="status-card">
+
+<i class="fa-solid fa-server"></i>
+
+<h3>API</h3>
+
+<span class="online">
+
+ONLINE
+
+</span>
+
+</div>
+
+<div class="status-card">
+
+<i class="fa-solid fa-database"></i>
+
+<h3>MongoDB</h3>
+
+<span class="online">
+
+CONNECTED
+
+</span>
+
+</div>
+
+<div class="status-card">
+
+<i class="fa-solid fa-memory"></i>
+
+<h3>Redis</h3>
+
+<span class="online">
+
+CONNECTED
+
+</span>
+
+</div>
+
+<div class="status-card">
+
+<i class="fa-solid fa-code-branch"></i>
+
+<h3>Version</h3>
+
+<span>
+
+v1.0.0
+
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ========================================= -->
+<!-- Features -->
+<!-- ========================================= -->
+
+<section
+id="features"
+class="features"
+>
+
+<div class="container">
+
+<div class="section-title">
+
+<h2>
+
+Core Features
+
+</h2>
+
+<p>
+
+Everything required for a modern
+
+production backend.
+
+</p>
+
+</div>
+
+<div class="feature-grid">
+
+<div class="feature-card">
+
+<i class="fa-solid fa-user-shield"></i>
+
+<h3>
+
+JWT Authentication
+
+</h3>
+
+<p>
+
+Access Tokens
+
+Refresh Tokens
+
+Role Based Access
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fa-solid fa-envelope-circle-check"></i>
+
+<h3>
+
+OTP Verification
+
+</h3>
+
+<p>
+
+Secure Email Verification
+
+Password Reset
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fa-solid fa-calendar-check"></i>
+
+<h3>
+
+Booking Engine
+
+</h3>
+
+<p>
+
+Slot Booking
+
+Availability
+
+Conflict Prevention
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fa-solid fa-credit-card"></i>
+
+<h3>
+
+Payments
+
+</h3>
+
+<p>
+
+Razorpay Integration
+
+Refunds
+
+Verification
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fa-solid fa-cloud-arrow-up"></i>
+
+<h3>
+
+Cloudinary
+
+</h3>
+
+<p>
+
+Image Uploads
+
+Optimization
+
+CDN Delivery
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fa-solid fa-bell"></i>
+
+<h3>
+
+Notifications
+
+</h3>
+
+<p>
+
+Socket.IO
+
+BullMQ
+
+Background Workers
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>TurfX Backend API</title>
+
+  <meta
+    name="description"
+    content="Production Ready Football Turf Booking Backend API"
+  />
+
+  <!-- Font -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Icons -->
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+  />
+
+  <!-- AOS -->
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/aos@2.3.4/dist/aos.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  />
+
+</head>
+
+<body>
+
+<div class="background-grid"></div>
+
+<div class="gradient gradient-1"></div>
+<div class="gradient gradient-2"></div>
+
+<!-- ========================================= -->
+<!-- Navbar -->
+<!-- ========================================= -->
+
+<header>
+
+<nav class="navbar">
+
+<div class="logo">
+
+<i class="fa-solid fa-futbol"></i>
+
+<span>TurfX API</span>
+
+</div>
+
+<div class="nav-links">
+
+<a href="#features">Features</a>
+
+<a href="#modules">Modules</a>
+
+<a href="#stack">Tech Stack</a>
+
+<a href="#architecture">Architecture</a>
+
+<a href="/api/docs/" target="_blank">
+Swagger
+</a>
+
+</div>
+
+</nav>
+
+</header>
+
+<!-- ========================================= -->
+<!-- Hero -->
+<!-- ========================================= -->
+
+<section class="hero">
+
+<div class="hero-content">
+
+<span class="badge">
+
+<i class="fa-solid fa-circle-check"></i>
+
+Production Ready Backend
+
+</span>
+
+<h1>
+
+Modern
+
+<span>
+
+Football Turf Booking
+
+</span>
+
+Backend API
+
+</h1>
+
+<p>
+
+Enterprise-grade REST API built with
+
+Node.js, Express, MongoDB, Redis,
+
+BullMQ, Socket.IO and Docker.
+
+Designed for scalability,
+
+performance and production deployment.
+
+</p>
+
+<div class="hero-buttons">
+
+<a
+href="/api/docs/"
+class="btn btn-primary"
+target="_blank"
+>
+
+<i class="fa-solid fa-book"></i>
+
+API Documentation
+
+</a>
+
+<a
+href="/api/v1/health"
+class="btn btn-outline"
+target="_blank"
+>
+
+<i class="fa-solid fa-heart-pulse"></i>
+
+Health Check
+
+</a>
+
+<a
+href="https://github.com/uixPhuke/turfx-backend-express"
+class="btn btn-outline"
+target="_blank"
+>
+
+<i class="fa-brands fa-github"></i>
+
+GitHub
+
+</a>
+
+</div>
+
+<div class="hero-stats">
+
+<div class="stat-card">
+
+<h2>69+</h2>
+
+<p>Passing Tests</p>
+
+</div>
+
+<div class="stat-card">
+
+<h2>10+</h2>
+
+<p>Core Modules</p>
+
+</div>
+
+<div class="stat-card">
+
+<h2>50+</h2>
+
+<p>REST APIs</p>
+
+</div>
+
+<div class="stat-card">
+
+<h2>100%</h2>
+
+<p>Docker Ready</p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ========================================= -->
+<!-- Live Status -->
+<!-- ========================================= -->
+
+<section class="status">
+
+<div class="container">
+
+<div class="section-title">
+
+<h2>Live System Status</h2>
+
+<p>
+
+Current production deployment
+
+</p>
+
+</div>
+
+<div class="status-grid">
+
+<div class="status-card">
+
+<i class="fa-solid fa-server"></i>
+
+<h3>API</h3>
+
+<span class="online">
+
+ONLINE
+
+</span>
+
+</div>
+
+<div class="status-card">
+
+<i class="fa-solid fa-database"></i>
+
+<h3>MongoDB</h3>
+
+<span class="online">
+
+CONNECTED
+
+</span>
+
+</div>
+
+<div class="status-card">
+
+<i class="fa-solid fa-memory"></i>
+
+<h3>Redis</h3>
+
+<span class="online">
+
+CONNECTED
+
+</span>
+
+</div>
+
+<div class="status-card">
+
+<i class="fa-solid fa-code-branch"></i>
+
+<h3>Version</h3>
+
+<span>
+
+v1.0.0
+
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ========================================= -->
+<!-- Features -->
+<!-- ========================================= -->
+
+<section
+id="features"
+class="features"
+>
+
+<div class="container">
+
+<div class="section-title">
+
+<h2>
+
+Core Features
+
+</h2>
+
+<p>
+
+Everything required for a modern
+
+production backend.
+
+</p>
+
+</div>
+
+<div class="feature-grid">
+
+<div class="feature-card">
+
+<i class="fa-solid fa-user-shield"></i>
+
+<h3>
+
+JWT Authentication
+
+</h3>
+
+<p>
+
+Access Tokens
+
+Refresh Tokens
+
+Role Based Access
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fa-solid fa-envelope-circle-check"></i>
+
+<h3>
+
+OTP Verification
+
+</h3>
+
+<p>
+
+Secure Email Verification
+
+Password Reset
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fa-solid fa-calendar-check"></i>
+
+<h3>
+
+Booking Engine
+
+</h3>
+
+<p>
+
+Slot Booking
+
+Availability
+
+Conflict Prevention
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fa-solid fa-credit-card"></i>
+
+<h3>
+
+Payments
+
+</h3>
+
+<p>
+
+Razorpay Integration
+
+Refunds
+
+Verification
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fa-solid fa-cloud-arrow-up"></i>
+
+<h3>
+
+Cloudinary
+
+</h3>
+
+<p>
+
+Image Uploads
+
+Optimization
+
+CDN Delivery
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fa-solid fa-bell"></i>
+
+<h3>
+
+Notifications
+
+</h3>
+
+<p>
+
+Socket.IO
+
+BullMQ
+
+Background Workers
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+<section id="modules">
+
+    <div class="container">
+
+        <div class="section-title">
+            <h2>API Modules</h2>
+            <p>Scalable modular architecture powering TurfX.</p>
+        </div>
+
+        <div class="module-grid">
+
+            <div class="module-card">
+                <i class="fa-solid fa-user-lock"></i>
+                <h3>Authentication</h3>
+                <ul>
+                    <li>JWT Authentication</li>
+                    <li>Refresh Tokens</li>
+                    <li>Email Verification</li>
+                    <li>Password Reset</li>
+                </ul>
+            </div>
+
+            <div class="module-card">
+                <i class="fa-solid fa-futbol"></i>
+                <h3>Turf</h3>
+                <ul>
+                    <li>Create Turf</li>
+                    <li>Update Turf</li>
+                    <li>Nearby Search</li>
+                    <li>Cloudinary Images</li>
+                </ul>
+            </div>
+
+            <div class="module-card">
+                <i class="fa-solid fa-calendar-days"></i>
+                <h3>Booking</h3>
+                <ul>
+                    <li>Book Slot</li>
+                    <li>Cancel Booking</li>
+                    <li>Booking History</li>
+                    <li>Availability</li>
+                </ul>
+            </div>
+
+            <div class="module-card">
+                <i class="fa-solid fa-credit-card"></i>
+                <h3>Payments</h3>
+                <ul>
+                    <li>Razorpay</li>
+                    <li>Refunds</li>
+                    <li>Invoices</li>
+                    <li>Transactions</li>
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+<section id="tech">
+
+<div class="container">
+
+<div class="section-title">
+<h2>Tech Stack</h2>
+<p>Modern technologies used to build TurfX.</p>
+</div>
+
+<table class="tech-table">
+
+<thead>
+
+<tr>
+
+<th>Layer</th>
+
+<th>Technology</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+<td>Runtime</td>
+<td>Node.js</td>
+</tr>
+
+<tr>
+<td>Framework</td>
+<td>Express.js</td>
+</tr>
+
+<tr>
+<td>Database</td>
+<td>MongoDB + Mongoose</td>
+</tr>
+
+<tr>
+<td>Cache</td>
+<td>Redis</td>
+</tr>
+
+<tr>
+<td>Queue</td>
+<td>BullMQ</td>
+</tr>
+
+<tr>
+<td>Realtime</td>
+<td>Socket.IO</td>
+</tr>
+
+<tr>
+<td>Storage</td>
+<td>Cloudinary</td>
+</tr>
+
+<tr>
+<td>Payments</td>
+<td>Razorpay</td>
+</tr>
+
+<tr>
+<td>Testing</td>
+<td>Jest + Supertest</td>
+</tr>
+
+<tr>
+<td>API Docs</td>
+<td>Swagger/OpenAPI</td>
+</tr>
+
+<tr>
+<td>Deployment</td>
+<td>Docker + Render</td>
+</tr>
+
+<tr>
+<td>CI/CD</td>
+<td>GitHub Actions</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+<section id="architecture">
+
+<div class="container">
+
+<div class="section-title">
+<h2>System Architecture</h2>
+<p>High-level backend architecture of TurfX.</p>
+</div>
+
+<div class="architecture">
+
+<div class="arch-card">
+
+<i class="fa-solid fa-mobile-screen"></i>
+
+<h3>Client</h3>
+
+<p>React Native App</p>
+
+</div>
+
+<div class="arch-card">
+
+<i class="fa-solid fa-server"></i>
+
+<h3>API</h3>
+
+<p>Express.js REST API</p>
+
+</div>
+
+<div class="arch-card">
+
+<i class="fa-solid fa-database"></i>
+
+<h3>Database</h3>
+
+<p>MongoDB Atlas</p>
+
+</div>
+
+<div class="arch-card">
+
+<i class="fa-solid fa-memory"></i>
+
+<h3>Cache</h3>
+
+<p>Redis + BullMQ</p>
+
+</div>
+
+<div class="arch-card">
+
+<i class="fa-solid fa-cloud"></i>
+
+<h3>Cloud</h3>
+
+<p>Cloudinary + Render</p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
