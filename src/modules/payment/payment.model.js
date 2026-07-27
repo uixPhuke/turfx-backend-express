@@ -379,20 +379,18 @@ paymentSchema.virtual("isFailed").get(function () {
 // Pre Save Hook
 // ==========================================
 
-paymentSchema.pre("save", function (next) {
+// ==========================================
+// Pre Save Hook
+// ==========================================
 
+paymentSchema.pre("save", function () {
   if (this.amount) {
-
     this.amount.total =
       this.amount.subtotal +
       this.amount.convenienceFee +
       this.amount.tax -
       this.amount.discount;
-
   }
-
-  next();
-
 });
 
 // ==========================================

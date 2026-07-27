@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
+const slotService = require("../slot/slot.service");
 
 const Payment = require("./payment.model");
 const Booking = require("../booking/booking.model");
@@ -10,11 +11,15 @@ const ApiError = require("../../utils/ApiError");
 // Razorpay Instance
 // ==========================================
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+const getRazorpay = () => {
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || "test_key",
+    key_secret:
+      process.env.RAZORPAY_KEY_SECRET || "test_secret",
+  });
+};
 
+const razorpay = getRazorpay();
 // ==========================================
 // Generate Receipt
 // Example:
