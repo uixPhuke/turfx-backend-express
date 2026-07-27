@@ -40,18 +40,19 @@ Modern Football Turf Booking Platform
     },
 
     servers: [
-      {
-        url:
-          process.env.NODE_ENV === "production"
-            ? process.env.API_URL
-            : `http://localhost:${process.env.PORT || 8000}`,
+  {
+    url:
+      process.env.NODE_ENV === "production"
+        ? process.env.API_URL ||
+          "https://turfx-backend-express.onrender.com"
+        : `http://localhost:${process.env.PORT || 8000}`,
 
-        description:
-          process.env.NODE_ENV === "production"
-            ? "Production Server"
-            : "Development Server",
-      },
-    ],
+    description:
+      process.env.NODE_ENV === "production"
+        ? "Production Server"
+        : "Development Server",
+  },
+],
 
     tags: [
       {
