@@ -1,6 +1,12 @@
 const ApiError = require("../utils/ApiError");
 
 const errorHandler = (err, req, res, next) => {
+  console.error("========== ERROR ==========");
+  console.error(err);
+  console.error(err.stack);
+  console.error("===========================");
+
+  // existing code...
   // Default Error
   let error = err;
 
