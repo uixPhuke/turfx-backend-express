@@ -24,75 +24,61 @@ afterAll(async () => {
   await mongoose.disconnect();
   await mongoServer.stop();
 });
+jest.mock("../src/utils/sendEmail", () => ({
+  sendEmail: jest.fn().mockResolvedValue(true),
+  verifyMailConnection: jest.fn(),
+}));
 
 describe("Authentication APIs", () => {
 
   // ================================
-  // Register
-  // ================================
+// Register
+// ================================
 
-  describe("POST /api/v1/auth/register", () => {
+describe("POST /api/v1/auth/register", () => {
 
-    it("should register a new user", async () => {
+  it("should register a new user", async () => {
 
-      const res = await request(app)
-
-        .post("/api/v1/auth/register")
-
-        .send({
-
-          name: "Ruhon Borah",
-
-          email: "ruhon@test.com",
-
-          phone: "9876543210",
-
-          password: "Password@123",
-
-        });
-
-      expect(res.statusCode).toBe(201);
-
-      expect(res.body.success).toBe(true);
-
-    });
-
-    it("should not register duplicate email", async () => {
-
-      await User.create({
-
-        name: "Test",
-
+    const res = await request(app)
+      .post("/api/v1/auth/register")
+      .send({
+        name: "Ruhon Borah",
         email: "ruhon@test.com",
-
-        phone: "9999999999",
-
+        phone: "9876543210",
         password: "Password@123",
-
       });
 
-      const res = await request(app)
+    console.log("REGISTER RESPONSE:");
+    console.log(res.body);
 
-        .post("/api/v1/auth/register")
-
-        .send({
-
-          name: "Another",
-
-          email: "ruhon@test.com",
-
-          phone: "8888888888",
-
-          password: "Password@123",
-
-        });
-
-      expect(res.statusCode).toBe(409);
-
-    });
+    expect(res.statusCode).toBe(201);
+    expect(res.body.success).toBe(true);
 
   });
 
+  it("should not register duplicate email", async () => {
+
+    await User.create({
+      name: "Test",
+      email: "ruhon@test.com",
+      phone: "9999999999",
+      password: "Password@123",
+    });
+
+    const res = await request(app)
+      .post("/api/v1/auth/register")
+      .send({
+        name: "Another",
+        email: "ruhon@test.com",
+        phone: "8888888888",
+        password: "Password@123",
+      });
+
+    expect(res.statusCode).toBe(409);
+
+  });
+
+});
   // ================================
   // Login
   // ================================
@@ -163,7 +149,7 @@ describe("Authentication APIs", () => {
   // Profile
   // ================================
 
-  describe("GET /api/v1/users/me", () => {
+  describe("GET /api/v1/users/profile", () => {
 
     let token;
 
@@ -206,7 +192,7 @@ describe("Authentication APIs", () => {
 
       const res = await request(app)
 
-        .get("/api/v1/users/me")
+        .get("/api/v1/users/profile")
 
         .set(
 
