@@ -409,18 +409,11 @@ couponSchema.statics.incrementUsage =
 // ==========================================
 // Middleware
 // ==========================================
-
-couponSchema.pre(
-  "save",
-  function (next) {
-
-    this.code =
-      this.code.toUpperCase();
-
-    next();
-
+couponSchema.pre("save", function () {
+  if (this.code) {
+    this.code = this.code.toUpperCase();
   }
-);
+});
 
 // ==========================================
 // JSON Options
