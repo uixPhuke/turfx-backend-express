@@ -1,6 +1,10 @@
 const request = require("supertest");
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
+const User = require("../src/modules/user/user.model");
+const Turf = require("../src/modules/turf/turf.model");
+const Slot = require("../src/modules/slot/slot.model");
+const Booking = require("../src/modules/booking/booking.model");
 
 const app = require("../src/app");
 
@@ -50,6 +54,106 @@ beforeAll(async () => {
         password: "Password@123",
 
       });
+      owner = await User.create({
+    name: "Owner",
+    email: "owner@test.com",
+    phone: "8888888888",
+    password: "Password@123",
+    role: "owner",
+  });
+turf = await Turf.create({
+  owner: owner._id,
+
+  name: "Test Turf",
+
+  description: "Football Turf",
+
+  images: [
+    {
+      public_id: "test",
+      url: "https://example.com/image.jpg",
+    },
+  ],
+
+  sports: ["football"],
+
+  pricing: {
+    weekday: 1000,
+    weekend: 1200,
+    holiday: 1500,
+  },
+
+  contact: {
+    phone: "9999999999",
+    email: "owner@test.com",
+  },
+
+  address: {
+    state: "Assam",
+    city: "Jorhat",
+    area: "Garamur",
+    pincode: "785001",
+    fullAddress: "Test Address",
+  },
+
+  location: {
+    type: "Point",
+    coordinates: [94.2037, 26.7509],
+  },
+});
+slot = await Slot.create({
+  turf: turf._id,
+
+  owner: owner._id,
+
+  bookingDate: new Date(),
+
+  startTime: "10:00",
+
+  endTime: "11:00",
+
+  price: 1000,
+});
+const user = await User.findOne({
+  email: "review@test.com",
+});
+
+booking = await Booking.create({
+  user: user._id,
+
+  owner: owner._id,
+
+  turf: turf._id,
+
+  slot: slot._id,
+
+  bookingDate: new Date(),
+
+  startTime: "10:00",
+
+  endTime: "11:00",
+
+  duration: 60,
+
+  players: 10,
+
+  sport: "football",
+
+  pricing: {
+    slotPrice: 1000,
+    convenienceFee: 0,
+    tax: 0,
+    discount: 0,
+    totalAmount: 1000,
+  },
+
+  bookingStatus: "completed",
+});
+slot.booking = booking._id;
+slot.status = "booked";
+await slot.save();
+turfId = turf._id;
+bookingId = booking._id;
 
   token =
     login.body.data.accessToken;
@@ -58,11 +162,6 @@ beforeAll(async () => {
   // Replace these with actual created Turf and Booking IDs
   // if your review module validates ownership.
 
-  turfId =
-    new mongoose.Types.ObjectId();
-
-  bookingId =
-    new mongoose.Types.ObjectId();
 
 });
 
@@ -138,7 +237,7 @@ describe("Review APIs", () => {
       const res =
         await request(app)
 
-          .get("/api/v1/reviews");
+          .get(`/api/v1/reviews/turf/${turfId}`)
 
       expect(res.statusCode)
         .toBe(200);
@@ -180,9 +279,7 @@ describe("Review APIs", () => {
       const res =
         await request(app)
 
-          .get(
-            "/api/v1/reviews/my"
-          )
+          .get("/api/v1/reviews/user/my-reviews")
 
           .set(
             "Authorization",
@@ -271,9 +368,7 @@ describe("Review APIs", () => {
       const res =
         await request(app)
 
-          .post(
-            `/api/v1/reviews/${reviewId}/reply`
-          )
+       .patch(`/api/v1/reviews/${reviewId}/reply`)
 
           .set(
             "Authorization",
@@ -309,9 +404,7 @@ describe("Review APIs", () => {
       const res =
         await request(app)
 
-          .get(
-            "/api/v1/reviews/owner"
-          )
+         .get("/api/v1/reviews/owner/statistics")
 
           .set(
             "Authorization",
@@ -340,9 +433,7 @@ describe("Review APIs", () => {
       const res =
         await request(app)
 
-          .get(
-            "/api/v1/reviews/statistics"
-          )
+         .get("/api/v1/reviews/owner/statistics")
 
           .set(
             "Authorization",
@@ -389,4 +480,15 @@ describe("Review APIs", () => {
 
   });
 
+});
+
+afterAll(async () => {
+  if (mongoose.connection.readyState === 1) {
+  await mongoose.connection.dropDatabase();
+  await mongoose.connection.close();
+}
+
+if (mongoServer) {
+  await mongoServer.stop();
+}
 });

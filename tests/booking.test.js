@@ -4,313 +4,455 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const app = require("../src/app");
 
+const User = require("../src/modules/user/user.model");
+const Turf = require("../src/modules/turf/turf.model");
+
 let mongoServer;
 
-let token;
+let ownerToken;
+let userToken;
+
+let ownerId;
+let userId;
+
 let turfId;
-let slotId;
 let bookingId;
 
 beforeAll(async () => {
+  // ============================
+  // MongoDB Memory Server
+  // ============================
+
   mongoServer = await MongoMemoryServer.create();
 
-  await mongoose.connect(
-    mongoServer.getUri()
-  );
+  await mongoose.connect(mongoServer.getUri());
 
-  // Register
+  // ============================
+  // Register Owner
+  // ============================
 
   await request(app)
-
     .post("/api/v1/auth/register")
-
     .send({
-      name: "Ruhon",
-
-      email: "ruhon@test.com",
-
-      phone: "9999999999",
-
+      name: "Owner",
+      email: "owner@test.com",
+      phone: "9999999991",
       password: "Password@123",
     });
 
-  // Login
+  // Make Owner
 
-  const login = await request(app)
+  const owner = await User.findOne({
+    email: "owner@test.com",
+  });
 
+  owner.role = "owner";
+  owner.isVerified = true;
+  owner.ownerDetails.isApproved = true;
+
+  await owner.save();
+
+  ownerId = owner._id;
+
+  // ============================
+  // Login Owner
+  // ============================
+
+  const ownerLogin = await request(app)
     .post("/api/v1/auth/login")
-
     .send({
-      email: "ruhon@test.com",
-
+      email: "owner@test.com",
       password: "Password@123",
     });
 
-  token =
-    login.body.data.accessToken;
+  ownerToken =
+    ownerLogin.body.data.accessToken;
 
+  // ============================
+  // Register Customer
+  // ============================
+
+  await request(app)
+    .post("/api/v1/auth/register")
+    .send({
+      name: "Customer",
+      email: "user@test.com",
+      phone: "9999999992",
+      password: "Password@123",
+    });
+
+  const user = await User.findOne({
+    email: "user@test.com",
+  });
+
+  user.isVerified = true;
+
+  await user.save();
+
+  userId = user._id;
+
+  // ============================
+  // Login Customer
+  // ============================
+
+  const userLogin = await request(app)
+    .post("/api/v1/auth/login")
+    .send({
+      email: "user@test.com",
+      password: "Password@123",
+    });
+
+  userToken =
+    userLogin.body.data.accessToken;
+
+  // ============================
   // Create Turf
+  // ============================
 
-  const turf = await request(app)
+  const turf = await Turf.create({
+    owner: ownerId,
 
-    .post("/api/v1/turfs")
+    name: "Green Valley Turf",
 
-    .set(
-      "Authorization",
-      `Bearer ${token}`
-    )
+    description:
+      "Premium Football Turf",
 
-    .send({
-      name: "Green Valley Turf",
-
-      description:
-        "Premium Turf",
-
-      sportType:
-        "football",
-
-      pricePerHour: 1000,
-
-      address: {
-        state: "Assam",
-
-        city: "Jorhat",
-
-        area: "Garamur",
-
-        pincode: "785007",
+    images: [
+      {
+        public_id: "sample",
+        url: "https://example.com/turf.jpg",
       },
-    });
+    ],
 
-  turfId =
-    turf.body.data._id;
+    sports: ["football"],
 
-  // Create Slot
+    pricing: {
+      weekday: 1000,
+      weekend: 1200,
+      holiday: 1500,
+    },
 
-  const slot = await request(app)
+    workingHours: {
+      is24Hours: false,
+      open: "06:00",
+      close: "22:00",
+    },
 
-    .post("/api/v1/slots")
+    slotDuration: 60,
 
-    .set(
-      "Authorization",
-      `Bearer ${token}`
-    )
+    maxPlayers: 14,
 
-    .send({
-      turf: turfId,
+    contact: {
+      phone: "9999999991",
+      email: "owner@test.com",
+    },
 
-      date: "2026-08-15",
+    facilities: {
+      parking: true,
+      washroom: true,
+      floodLights: true,
+      drinkingWater: true,
+    },
 
-      startTime: "18:00",
+    address: {
+      state: "Assam",
+      city: "Jorhat",
+      area: "Garamur",
+      pincode: "785007",
+      fullAddress:
+        "Garamur, Jorhat, Assam",
+    },
 
-      endTime: "19:00",
+    location: {
+      type: "Point",
+      coordinates: [94.2037, 26.7509],
+    },
 
-      price: 1000,
-    });
+    isApproved: true,
+    isVerified: true,
+    isActive: true,
+  });
 
-  slotId =
-    slot.body.data._id;
+  turfId = turf._id;
 });
 
-afterAll(async () => {
-  await mongoose.connection.dropDatabase();
-
-  await mongoose.connection.close();
-
-  await mongoServer.stop();
-});
+// ==========================================
+// Booking APIs
+// ==========================================
 
 describe("Booking APIs", () => {
 
-  // ==========================
+  // ==========================================
   // Create Booking
-  // ==========================
+  // ==========================================
 
   describe("POST /api/v1/bookings", () => {
 
     it("should create booking", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .post("/api/v1/bookings")
+        .set(
+          "Authorization",
+          `Bearer ${userToken}`
+        )
+        .send({
+          turf: turfId,
 
-          .post("/api/v1/bookings")
+          bookingDate: "2026-08-15",
 
-          .set(
-            "Authorization",
-            `Bearer ${token}`
-          )
+          startTime: "18:00",
 
-          .send({
+          endTime: "19:00",
 
-            turf: turfId,
+          players: 10,
 
-            slot: slotId,
+          sport: "football",
+        });
 
-            bookingDate:
-              "2026-08-15",
+      console.log(res.body);
 
-          });
+      expect(res.statusCode).toBe(201);
 
-      expect(res.statusCode)
-        .toBe(201);
+      expect(res.body.success).toBe(true);
 
-      expect(res.body.success)
-        .toBe(true);
-
-      bookingId =
-        res.body.data._id;
+      bookingId = res.body.data._id;
 
     });
 
   });
 
-  // ==========================
-  // Prevent Duplicate Booking
-  // ==========================
+  // ==========================================
+  // Duplicate Booking
+  // ==========================================
 
   describe("Duplicate Booking", () => {
 
     it("should reject duplicate booking", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .post("/api/v1/bookings")
+        .set(
+          "Authorization",
+          `Bearer ${userToken}`
+        )
+        .send({
+          turf: turfId,
 
-          .post("/api/v1/bookings")
+          bookingDate: "2026-08-15",
 
-          .set(
-            "Authorization",
-            `Bearer ${token}`
-          )
+          startTime: "18:00",
 
-          .send({
+          endTime: "19:00",
 
-            turf: turfId,
+          players: 10,
 
-            slot: slotId,
+          sport: "football",
+        });
 
-            bookingDate:
-              "2026-08-15",
-
-          });
-
-      expect(res.statusCode)
-        .toBe(400);
+      expect(res.statusCode).toBe(409);
 
     });
 
   });
 
-  // ==========================
+  // ==========================================
   // My Bookings
-  // ==========================
+  // ==========================================
 
-  describe("GET /api/v1/bookings/my", () => {
+  describe("GET /api/v1/bookings/my-bookings", () => {
 
-    it("should return user bookings", async () => {
+    it("should return my bookings", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .get("/api/v1/bookings/my-bookings")
+        .set(
+          "Authorization",
+          `Bearer ${userToken}`
+        );
 
-          .get("/api/v1/bookings/my")
+      expect(res.statusCode).toBe(200);
 
-          .set(
-            "Authorization",
-            `Bearer ${token}`
-          );
-
-      expect(res.statusCode)
-        .toBe(200);
+      expect(res.body.success).toBe(true);
 
     });
 
   });
 
-  // ==========================
+  // ==========================================
   // Booking Details
-  // ==========================
+  // ==========================================
 
   describe("GET /api/v1/bookings/:id", () => {
 
-    it("should return booking", async () => {
+    it("should return booking details", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .get(`/api/v1/bookings/${bookingId}`)
+        .set(
+          "Authorization",
+          `Bearer ${userToken}`
+        );
 
-          .get(
-            `/api/v1/bookings/${bookingId}`
-          )
+      expect(res.statusCode).toBe(200);
 
-          .set(
-            "Authorization",
-            `Bearer ${token}`
-          );
-
-      expect(res.statusCode)
-        .toBe(200);
+      expect(res.body.success).toBe(true);
 
     });
 
   });
 
-  // ==========================
+  // ==========================================
   // Cancel Booking
-  // ==========================
+  // ==========================================
 
-  describe("PATCH Cancel", () => {
+  describe("PATCH Cancel Booking", () => {
 
     it("should cancel booking", async () => {
 
-      const res =
-        await request(app)
+      const res = await request(app)
+        .patch(
+          `/api/v1/bookings/${bookingId}/cancel`
+        )
+        .set(
+          "Authorization",
+          `Bearer ${userToken}`
+        )
+        .send({
+          reason: "Plan Changed",
+        });
 
-          .patch(
-            `/api/v1/bookings/${bookingId}/cancel`
-          )
+      expect(res.statusCode).toBe(200);
 
-          .set(
-            "Authorization",
-            `Bearer ${token}`
-          )
-
-          .send({
-
-            reason:
-              "Plan Changed",
-
-          });
-
-      expect(res.statusCode)
-        .toBe(200);
+      expect(res.body.success).toBe(true);
 
     });
 
   });
 
-  // ==========================
-  // Booking Statistics
-  // ==========================
+});
+// ==========================================
+// Owner Routes
+// ==========================================
 
-  describe("GET Statistics", () => {
+describe("Owner Booking APIs", () => {
 
-    it("should return booking stats", async () => {
+  // ==========================================
+  // Get All Owner Bookings
+  // ==========================================
 
-      const res =
-        await request(app)
+  describe("GET /api/v1/bookings/owner/all", () => {
 
-          .get(
-            "/api/v1/bookings/statistics"
-          )
+    it("should return owner bookings", async () => {
 
-          .set(
-            "Authorization",
-            `Bearer ${token}`
-          );
+      const res = await request(app)
+        .get("/api/v1/bookings/owner/all")
+        .set(
+          "Authorization",
+          `Bearer ${ownerToken}`
+        );
 
-      expect(res.statusCode)
-        .toBe(200);
+      expect(res.statusCode).toBe(200);
+
+      expect(res.body.success).toBe(true);
 
     });
 
   });
+
+  // ==========================================
+  // Get Today's Bookings
+  // ==========================================
+
+  describe("GET /api/v1/bookings/owner/today", () => {
+
+    it("should return today's bookings", async () => {
+
+      const res = await request(app)
+        .get("/api/v1/bookings/owner/today")
+        .set(
+          "Authorization",
+          `Bearer ${ownerToken}`
+        );
+
+      expect(res.statusCode).toBe(200);
+
+      expect(res.body.success).toBe(true);
+
+    });
+
+  });
+
+  // ==========================================
+  // Booking Calendar
+  // ==========================================
+
+  describe("GET /api/v1/bookings/owner/calendar", () => {
+
+    it("should return booking calendar", async () => {
+
+      const res = await request(app)
+        .get("/api/v1/bookings/owner/calendar")
+        .query({
+          month: 8,
+          year: 2026,
+        })
+        .set(
+          "Authorization",
+          `Bearer ${ownerToken}`
+        );
+
+      expect(res.statusCode).toBe(200);
+
+      expect(res.body.success).toBe(true);
+
+    });
+
+  });
+
+  // ==========================================
+  // Owner Dashboard
+  // ==========================================
+
+  describe("GET /api/v1/bookings/owner/dashboard", () => {
+
+    it("should return dashboard", async () => {
+
+      const res = await request(app)
+        .get("/api/v1/bookings/owner/dashboard")
+        .set(
+          "Authorization",
+          `Bearer ${ownerToken}`
+        );
+
+      expect(res.statusCode).toBe(200);
+
+      expect(res.body.success).toBe(true);
+
+    });
+
+  });
+
+});
+
+// ==========================================
+// Cleanup
+// ==========================================
+
+afterAll(async () => {
+
+  if (mongoose.connection.readyState === 1) {
+
+    await mongoose.connection.dropDatabase();
+
+    await mongoose.connection.close();
+
+  }
+
+  if (mongoServer) {
+
+    await mongoServer.stop();
+
+  }
 
 });
