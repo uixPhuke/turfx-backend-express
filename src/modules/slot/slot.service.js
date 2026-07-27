@@ -83,15 +83,23 @@ const getAvailableSlots = async (
     );
   }
 
-  // Working Hours
+ // Working Hours
 
-  let openTime = "00:00";
-  let closeTime = "23:59";
+let openTime = "00:00";
+let closeTime = "23:59";
 
-  if (!turf.workingHours.is24Hours) {
-    openTime = turf.workingHours.open;
-    closeTime = turf.workingHours.close;
-  }
+const workingHours = turf.workingHours || {
+  is24Hours: true,
+  open: "00:00",
+  close: "23:59",
+};
+
+if (!workingHours.is24Hours) {
+  openTime = workingHours.open;
+  closeTime = workingHours.close;
+} // Working Hours
+
+
 
   // Generate All Possible Slots
 

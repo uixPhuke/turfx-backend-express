@@ -5,6 +5,10 @@ const { body, param, query } = require("express-validator");
 // ==========================================
 
 const createTurfValidation = [
+  (req, res, next) => {
+    console.log("BODY:", req.body);
+    next();
+  },
   // ======================================
   // Basic Information
   // ======================================
@@ -27,9 +31,18 @@ const createTurfValidation = [
   // Sports
   // ======================================
 
-  body("sports")
-    .isArray({ min: 1 })
-    .withMessage("Select at least one sport"),
+body("sports")
+  .customSanitizer((value) => {
+    if (Array.isArray(value)) return value;
+
+    if (typeof value === "string") {
+      return [value];
+    }
+
+    return [];
+  })
+  .isArray({ min: 1 })
+  .withMessage("Select at least one sport"),
 
   body("sports.*")
     .isIn([
@@ -41,6 +54,7 @@ const createTurfValidation = [
       "tennis",
     ])
     .withMessage("Invalid sport"),
+    
 
   // ======================================
   // Pricing
