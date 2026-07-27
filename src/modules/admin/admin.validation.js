@@ -250,7 +250,7 @@ const changePasswordValidation = [
       "Password must contain at least one special character"
     ),
 
-  body("confirmPassword")
+  /*body("confirmPassword")
     .notEmpty()
     .withMessage(
       "Confirm password is required"
@@ -273,7 +273,7 @@ const changePasswordValidation = [
 
       }
     ),
-
+*/
 ];
 
 // ==========================================

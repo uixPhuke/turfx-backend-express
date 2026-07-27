@@ -227,75 +227,56 @@ const createBooking = async (
   // Create Booking
   // ========================================
 
-  const booking = await Booking.create({
 
-    bookingNumber,
 
-    user: user._id,
+// Create booking object (not saved)
+const booking = new Booking({
+  bookingNumber,
 
-    owner: turf.owner,
+  user: user._id,
+  owner: turf.owner,
+  turf: turf._id,
 
-    turf: turf._id,
+  bookingDate: new Date(bookingDate),
 
-    bookingDate: new Date(
-      bookingDate
-    ),
+  startTime,
+  endTime,
 
-    startTime,
+  duration: turf.slotDuration,
 
-    endTime,
+  players,
+  sport,
 
-    duration:
-      turf.slotDuration,
+  pricing,
 
-    players,
+  coupon: {
+    code: couponCode || null,
+    discountAmount: discount,
+  },
 
-    sport,
+  notes,
 
-    pricing,
+  bookingStatus: "pending",
 
-    coupon: {
-      code: couponCode || null,
-      discountAmount: discount,
-    },
+  payment: {
+    method: "razorpay",
+    status: "pending",
+  },
+});
+const slot = await slotService.bookSlot(
+  booking._id,
+  turf._id,
+  turf.owner,
+  bookingDate,
+  startTime,
+  endTime,
+  pricing.slotPrice
+);
 
-    notes,
+booking.slot = slot._id;
 
-    bookingStatus: "pending",
+await booking.save();
 
-    payment: {
-      method: "razorpay",
-      status: "pending",
-    },
-
-  });
-
-  // ========================================
-  // Reserve Slot
-  // ========================================
-
-  const slot =
-    await slotService.bookSlot(
-
-      booking._id,
-
-      turf._id,
-
-      turf.owner,
-
-      bookingDate,
-
-      startTime,
-
-      endTime,
-
-      pricing.slotPrice
-
-    );
-
-  booking.slot = slot._id;
-
-  await booking.save();
 
   // ========================================
   // Razorpay Placeholder
