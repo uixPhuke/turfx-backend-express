@@ -49,7 +49,16 @@ const bookingSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+// ======================================
+// Booking Number
+// ======================================
 
+bookingNumber: {
+  type: String,
+  required: true,
+  unique: true,
+  index: true,
+},
     // ======================================
     // Booking Information
     // ======================================
@@ -326,7 +335,16 @@ const bookingSchema = new mongoose.Schema(
 // ==========================================
 // Virtuals
 // ==========================================
+// ==========================================
+// Generate Booking Number
+// ==========================================
 
+bookingSchema.pre("validate", async function () {
+  if (!this.bookingNumber) {
+    const count = await mongoose.model("Booking").countDocuments();
+    this.bookingNumber = `BK-${String(count + 1).padStart(6, "0")}`;
+  }
+});
 bookingSchema.virtual("isUpcoming").get(function () {
   return (
     this.bookingStatus === "confirmed" &&
@@ -345,8 +363,7 @@ bookingSchema.virtual("isCancelled").get(function () {
 // ==========================================
 // Pre Save Hook
 // ==========================================
-
-bookingSchema.pre("save", function (next) {
+bookingSchema.pre("save", function () {
   if (this.pricing) {
     this.pricing.totalAmount =
       this.pricing.slotPrice +
@@ -354,8 +371,6 @@ bookingSchema.pre("save", function (next) {
       this.pricing.tax -
       this.pricing.discount;
   }
-
-  next();
 });
 
 // ==========================================
