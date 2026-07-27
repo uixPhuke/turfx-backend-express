@@ -5,11 +5,16 @@ const jwt = require("jsonwebtoken");
 const Admin = require("./admin.model");
 
 const ApiError = require("../../utils/ApiError");
+const User = require("../user/user.model");
 
+//const {
+ // generateAccessToken,
+  //generateRefreshToken,
+//} = require("../auth/auth.service");
 const {
   generateAccessToken,
   generateRefreshToken,
-} = require("../../sockets/middleware");
+} = require("../../utils/generateToken");
 
 // ==========================================
 // Helper Functions
@@ -1031,7 +1036,7 @@ const toggleAdminStatus = async (
 // Get All Users
 // ==========================================
 
-const User = require("../user/user.model");
+
 
 const getAllUsers = async (
   query = {}
@@ -1293,6 +1298,7 @@ const unblockUser = async (
 // ==========================================
 
 //const Owner = require("../owner/owner.model");
+
 const Turf = require("../turf/turf.model");
 const Notification = require("../notification/notification.model");
 
@@ -1317,7 +1323,10 @@ const approveOwner = async (
     );
   }
 
-  const owner = await Owner.findById(ownerId);
+ const owner = await User.findOne({
+  _id: ownerId,
+  role: "owner",
+});
 
   if (!owner) {
     throw new ApiError(
@@ -1326,33 +1335,24 @@ const approveOwner = async (
     );
   }
 
-  if (owner.status === "approved") {
-    throw new ApiError(
-      400,
-      "Owner is already approved"
-    );
-  }
+  
+if (owner.ownerDetails.isApproved) {
+  throw new ApiError(400, "Owner is already approved");
+}
 
-  owner.status = "approved";
-  owner.isVerified = true;
-  owner.approvedBy = adminId;
-  owner.approvedAt = new Date();
+owner.ownerDetails.isApproved = true;
+owner.isVerified = true;
 
-  await owner.save();
+await owner.save();
+
+await owner.save();
 
   await Notification.create({
-
-    user: owner.user,
-
-    title: "Owner Account Approved",
-
-    message:
-      "Congratulations! Your owner account has been approved.",
-
-    type: "owner_approved",
-
-  });
-
+  receiver: owner._id,
+  title: "Owner Account Approved",
+  message: "Congratulations! Your owner account has been approved.",
+  type: "owner_approved",
+});
   return owner;
 
 };
@@ -1379,7 +1379,10 @@ const rejectOwner = async (
     );
   }
 
-  const owner = await Owner.findById(ownerId);
+const owner = await User.findOne({
+  _id: ownerId,
+  role: "owner",
+});
 
   if (!owner) {
     throw new ApiError(
@@ -1388,7 +1391,7 @@ const rejectOwner = async (
     );
   }
 
-  owner.status = "rejected";
+  owner.ownerDetails.isApproved = false;
   owner.rejectionReason = reason;
   owner.approvedBy = adminId;
   owner.approvedAt = new Date();
@@ -1396,18 +1399,11 @@ const rejectOwner = async (
   await owner.save();
 
   await Notification.create({
-
-    user: owner.user,
-
-    title: "Owner Application Rejected",
-
-    message:
-      reason ||
-      "Your owner application has been rejected.",
-
-    type: "owner_rejected",
-
-  });
+  receiver: owner._id,
+  title: "Owner Application Rejected",
+  message: reason || "Your owner application has been rejected.",
+  type: "owner_rejected",
+});
 
   return owner;
 
@@ -1452,7 +1448,7 @@ const approveTurf = async (
 
   await Notification.create({
 
-    user: turf.owner,
+   receiver: turf.owner,
 
     title: "Turf Approved",
 
@@ -1508,7 +1504,7 @@ const rejectTurf = async (
 
   await Notification.create({
 
-    user: turf.owner,
+    receiver: turf.owner,
 
     title: "Turf Rejected",
 
@@ -1541,58 +1537,42 @@ const Review = require("../review/review.model");
 const getDashboardStatistics = async () => {
 
   const [
-
-    totalUsers,
-
-    totalOwners,
-
-    totalTurfs,
-
-    totalBookings,
-
-    totalPayments,
-
-    totalCoupons,
-
-    totalReviews,
-
-    totalWallets,
-
-  ] = await Promise.all([
-
-    User.countDocuments({
-      isDeleted: false,
-    }),
-
-    Owner.countDocuments({
-      isDeleted: false,
-    }),
-
-    Turf.countDocuments({
-      isDeleted: false,
-    }),
-
-    Booking.countDocuments({
-      isDeleted: false,
-    }),
-
-    Payment.countDocuments({
-      isDeleted: false,
-    }),
-
-    Coupon.countDocuments({
-      isDeleted: false,
-    }),
-
-    Review.countDocuments({
-      isDeleted: false,
-    }),
-
-    Wallet.countDocuments({
-      isDeleted: false,
-    }),
-
-  ]);
+  totalUsers,
+  totalOwners,
+  totalTurfs,
+  totalBookings,
+  totalPayments,
+  totalCoupons,
+  totalReviews,
+  totalWallets,
+] = await Promise.all([
+  User.countDocuments({
+    role: "user",
+    isDeleted: false,
+  }),
+  User.countDocuments({
+    role: "owner",
+    isDeleted: false,
+  }),
+  Turf.countDocuments({
+    isDeleted: false,
+  }),
+  Booking.countDocuments({
+    isDeleted: false,
+  }),
+  Payment.countDocuments({
+    isDeleted: false,
+  }),
+  Coupon.countDocuments({
+    isDeleted: false,
+  }),
+  Review.countDocuments({
+    isDeleted: false,
+  }),
+  Wallet.countDocuments({
+    isDeleted: false,
+  }),
+]);
 
   return {
 
@@ -1763,6 +1743,8 @@ const mongoose = require("mongoose");
 const getAuditLogs = async (
   query = {}
 ) => {
+  console.log("Entered getAuditLogs");
+  try{
 
   const {
 
@@ -1828,80 +1810,50 @@ const getAuditLogs = async (
 
     },
 
-  };
-
+  };} catch (err) {
+    console.error("getAuditLogs:", err);
+    throw err;
+  }
 };
+
+
 
 // ==========================================
 // Get Recent Activities
 // ==========================================
 
-const getRecentActivities =
-  async () => {
-
-    const [
-
-      bookings,
-
-      payments,
-
-      reviews,
-
-      users,
-
-    ] = await Promise.all([
-
-      Booking.find()
-        .sort({
-          createdAt: -1,
-        })
-        .limit(5),
-
-      Payment.find()
-        .sort({
-          createdAt: -1,
-        })
-        .limit(5),
-
-      Review.find()
-        .sort({
-          createdAt: -1,
-        })
-        .limit(5),
-
-      User.find()
-        .sort({
-          createdAt: -1,
-        })
-        .limit(5),
-
-    ]);
+const getRecentActivities = async () => {
+  console.log("Entered getRecentActivities");
+  try {
+    const [bookings, payments, reviews, users] =
+      await Promise.all([
+        Booking.find().sort({ createdAt: -1 }).limit(5),
+        Payment.find().sort({ createdAt: -1 }).limit(5),
+        Review.find().sort({ createdAt: -1 }).limit(5),
+        User.find().sort({ createdAt: -1 }).limit(5),
+      ]);
 
     return {
-
-      recentBookings:
-        bookings,
-
-      recentPayments:
-        payments,
-
-      recentReviews:
-        reviews,
-
-      newUsers:
-        users,
-
+      recentBookings: bookings,
+      recentPayments: payments,
+      recentReviews: reviews,
+      newUsers: users,
     };
-
+  } catch (err) {
+    console.error("getRecentActivities:", err);
+    throw err;
+  }
 };
-
 // ==========================================
 // Get System Health
 // ==========================================
 
 const getSystemHealth =
   async () => {
+    console.log("Entered getSystemHealth");
 
+    
+try{
     const dbStatus =
       mongoose.connection.readyState;
 
@@ -1962,7 +1914,12 @@ const getSystemHealth =
 
     };
 
+} catch (err) {
+    console.error("getSystemHealth:", err);
+    throw err;
+  }
 };
+
 
 // ==========================================
 // Helper Functions
