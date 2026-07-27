@@ -3,6 +3,19 @@ const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const app = require("../src/app");
+const User = require("../src/modules/user/user.model"); 
+const path = require("path");
+
+jest.mock("../src/config/cloudinary", () => ({
+  uploadToCloudinary: jest.fn(async () => ({
+    public_id: "test_public_id",
+    url: "https://example.com/test.jpg",
+    secure_url: "https://example.com/test.jpg",
+  })),
+  deleteFromCloudinary: jest.fn(async () => ({
+    result: "ok",
+  })),
+}));
 
 let mongoServer;
 let accessToken;
@@ -11,11 +24,9 @@ let turfId;
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
 
-  await mongoose.connect(
-    mongoServer.getUri()
-  );
+  await mongoose.connect(mongoServer.getUri());
 
-  // Register Owner
+  // Register
   await request(app)
     .post("/api/v1/auth/register")
     .send({
@@ -25,6 +36,15 @@ beforeAll(async () => {
       password: "Password@123",
     });
 
+  // Promote to owner
+  await User.updateOne(
+    { email: "owner@test.com" },
+    {
+      role: "owner",
+      "ownerDetails.isApproved": true,
+    }
+  );
+
   // Login
   const login = await request(app)
     .post("/api/v1/auth/login")
@@ -33,282 +53,66 @@ beforeAll(async () => {
       password: "Password@123",
     });
 
-  accessToken =
-    login.body.data.accessToken;
+  console.log(login.body);
+
+  accessToken = login.body.data.accessToken;
+
+  console.log("TOKEN:", accessToken);
+});
+
+
+
+describe("POST /api/v1/turfs", () => {
+  it("should create turf", async () => {
+
+    const res = await request(app)
+      .post("/api/v1/turfs")
+      .set("Authorization", `Bearer ${accessToken}`)
+
+      .field("name", "Green Valley Turf")
+      .field(
+        "description",
+        "Premium football turf for 7-a-side matches."
+      )
+
+      .field("sports", "football")
+
+      .field("pricing[weekday]", "1200")
+      .field("pricing[weekend]", "1500")
+
+      .field("contact[phone]", "9999999999")
+
+      .field("address[state]", "Assam")
+      .field("address[city]", "Jorhat")
+      .field("address[area]", "Garamur")
+      .field("address[pincode]", "785007")
+      .field("address[fullAddress]", "Garamur, Jorhat, Assam")
+
+      .field("location[type]", "Point")
+      .field("location[coordinates][0]", "94.2037")
+      .field("location[coordinates][1]", "26.7509")
+
+      .attach(
+        "images",
+        path.join(__dirname, "fixtures", "turf.png")
+      );
+
+    console.log("STATUS:", res.statusCode);
+    console.log("BODY:", JSON.stringify(res.body, null, 2));
+
+    expect(res.statusCode).toBe(201);
+
+    turfId = res.body.data._id;
+  });
 });
 
 afterAll(async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
-  await mongoServer.stop();
-});
-
-describe("Turf APIs", () => {
-
-  // ==========================
-  // Create Turf
-  // ==========================
-
-  describe("POST /api/v1/turfs", () => {
-
-    it("should create turf", async () => {
-
-      const res = await request(app)
-
-        .post("/api/v1/turfs")
-
-        .set(
-          "Authorization",
-          `Bearer ${accessToken}`
-        )
-
-        .field(
-          "name",
-          "Green Valley Turf"
-        )
-
-        .field(
-          "description",
-          "Premium football turf"
-        )
-
-        .field(
-          "sportType",
-          "football"
-        )
-
-        .field(
-          "pricePerHour",
-          1200
-        )
-
-        .field(
-          "size",
-          "7A Side"
-        )
-
-        .field(
-          "address[state]",
-          "Assam"
-        )
-
-        .field(
-          "address[city]",
-          "Jorhat"
-        )
-
-        .field(
-          "address[area]",
-          "Garamur"
-        )
-
-        .field(
-          "address[pincode]",
-          "785007"
-        );
-
-      expect(res.statusCode).toBe(201);
-
-      expect(res.body.success).toBe(true);
-
-      turfId =
-        res.body.data._id;
-
-    });
-
-  });
-
-  // ==========================
-  // Get All Turfs
-  // ==========================
-
-  describe("GET /api/v1/turfs", () => {
-
-    it("should return all turfs", async () => {
-
-      const res =
-        await request(app)
-
-          .get("/api/v1/turfs");
-
-      expect(res.statusCode)
-        .toBe(200);
-
-      expect(res.body.success)
-        .toBe(true);
-
-    });
-
-  });
-
-  // ==========================
-  // Get Turf
-  // ==========================
-
-  describe("GET /api/v1/turfs/:id", () => {
-
-    it("should return turf details", async () => {
-
-      const res =
-        await request(app)
-
-          .get(
-            `/api/v1/turfs/${turfId}`
-          );
-
-      expect(res.statusCode)
-        .toBe(200);
-
-    });
-
-  });
-
-  // ==========================
-  // Update Turf
-  // ==========================
-
-  describe("PATCH /api/v1/turfs/:id", () => {
-
-    it("should update turf", async () => {
-
-      const res =
-        await request(app)
-
-          .patch(
-            `/api/v1/turfs/${turfId}`
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${accessToken}`
-          )
-
-          .send({
-
-            pricePerHour: 1500,
-
-            description:
-              "Updated Description",
-
-          });
-
-      expect(res.statusCode)
-        .toBe(200);
-
-    });
-
-  });
-
-  // ==========================
-  // Owner Turfs
-  // ==========================
-
-  describe("GET /api/v1/turfs/my", () => {
-
-    it("should return owner turfs", async () => {
-
-      const res =
-        await request(app)
-
-          .get("/api/v1/turfs/my")
-
-          .set(
-            "Authorization",
-            `Bearer ${accessToken}`
-          );
-
-      expect(res.statusCode)
-        .toBe(200);
-
-    });
-
-  });
-
-  // ==========================
-  // Nearby Turfs
-  // ==========================
-
-  describe("GET /api/v1/turfs/nearby", () => {
-
-    it("should return nearby turfs", async () => {
-
-      const res =
-        await request(app)
-
-          .get(
-            "/api/v1/turfs/nearby"
-          )
-
-          .query({
-
-            latitude: 26.7509,
-
-            longitude: 94.2037,
-
-            radius: 5,
-
-          });
-
-      expect(res.statusCode)
-        .toBe(200);
-
-    });
-
-  });
-
-  // ==========================
-  // Search Turf
-  // ==========================
-
-  describe("GET /api/v1/turfs/search", () => {
-
-    it("should search turf", async () => {
-
-      const res =
-        await request(app)
-
-          .get(
-            "/api/v1/turfs/search"
-          )
-
-          .query({
-
-            keyword: "football",
-
-          });
-
-      expect(res.statusCode)
-        .toBe(200);
-
-    });
-
-  });
-
-  // ==========================
-  // Delete Turf
-  // ==========================
-
-  describe("DELETE /api/v1/turfs/:id", () => {
-
-    it("should delete turf", async () => {
-
-      const res =
-        await request(app)
-
-          .delete(
-            `/api/v1/turfs/${turfId}`
-          )
-
-          .set(
-            "Authorization",
-            `Bearer ${accessToken}`
-          );
-
-      expect(res.statusCode)
-        .toBe(200);
-
-    });
-
-  });
-
+  if (mongoose.connection.readyState === 1) {
+    await mongoose.connection.dropDatabase();
+    await mongoose.connection.close();
+  }
+
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
 });

@@ -1,6 +1,8 @@
 const request = require("supertest");
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
+const User = require("../src/modules/user/user.model");
+const Turf = require("../src/modules/turf/turf.model");
 
 const app = require("../src/app");
 
@@ -8,6 +10,7 @@ let mongoServer;
 
 let token;
 let couponId;
+let turf;
 
 beforeAll(async () => {
   mongoServer =
@@ -32,7 +35,10 @@ beforeAll(async () => {
 
       password: "Password@123",
     });
-
+await User.updateOne(
+  { email: "coupon@test.com" },
+  { role: "admin" }
+);
   // Login
 
   const login =
@@ -46,16 +52,63 @@ beforeAll(async () => {
         password: "Password@123",
       });
 
+expect(login.statusCode).toBe(200);
+
+console.log(login.body.data.user.role);
   token =
     login.body.data.accessToken;
+    const admin = await User.findOne({
+  email: "coupon@test.com",
 });
 
-afterAll(async () => {
-  await mongoose.connection.dropDatabase();
+turf = await Turf.create({
+  owner: admin._id,
 
-  await mongoose.connection.close();
+  name: "Test Turf",
+  description: "Test Turf Description",
 
-  await mongoServer.stop();
+  images: [
+    {
+      public_id: "test",
+      url: "https://example.com/test.jpg",
+    },
+  ],
+
+  sports: ["football"],
+
+  pricing: {
+    weekday: 1000,
+    weekend: 1200,
+    holiday: 1500,
+  },
+
+  workingHours: {
+    is24Hours: true,
+  },
+
+  contact: {
+    phone: "9999999999",
+    email: "owner@test.com",
+  },
+
+  facilities: {},
+
+  address: {
+    state: "Assam",
+    city: "Jorhat",
+    area: "Gar Ali",
+    pincode: "785001",
+    fullAddress: "Gar Ali, Jorhat",
+  },
+
+  location: {
+    type: "Point",
+    coordinates: [94.2037, 26.7509],
+  },
+
+  isApproved: true,
+  isVerified: true,
+});
 });
 
 describe("Coupon APIs", () => {
@@ -234,13 +287,11 @@ describe("Coupon APIs", () => {
           )
 
           .send({
-
-            code: "SAVE200",
-
-            bookingAmount: 1500,
-
-          });
-
+  code: "SAVE200",
+  bookingAmount: 1500,
+  turfId: turf._id,
+});
+console.log(res.body);
       expect(res.statusCode)
         .toBe(200);
 
@@ -294,9 +345,7 @@ describe("Coupon APIs", () => {
       const res =
         await request(app)
 
-          .patch(
-            `/api/v1/coupons/${couponId}/activate`
-          )
+        .patch(`/api/v1/coupons/${couponId}/toggle`)
 
           .set(
             "Authorization",
@@ -321,9 +370,7 @@ describe("Coupon APIs", () => {
       const res =
         await request(app)
 
-          .patch(
-            `/api/v1/coupons/${couponId}/deactivate`
-          )
+        .patch(`/api/v1/coupons/${couponId}/toggle`)
 
           .set(
             "Authorization",
@@ -391,4 +438,13 @@ describe("Coupon APIs", () => {
 
   });
 
+});
+
+afterAll(async () => {
+  await mongoose.connection.dropDatabase();
+  await mongoose.connection.close();
+
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
 });
