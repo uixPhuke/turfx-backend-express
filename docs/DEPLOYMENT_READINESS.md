@@ -1,6 +1,6 @@
 # PLAYZA deployment readiness — 6 November 2026
 
-**Assessment: prepared for staging setup and further validation; not cleared for public production release.** No new product features were added during this preparation. No commits/pushes, hosted resources, production migrations, live charges or store submissions were performed.
+**Assessment: prepared for staging setup and further validation; not cleared for public production release.** No new product features were added. Phase 2 has published isolated staging source branches and created a Render Blueprint and actual EAS project. Render provisioning failed on billing; no hosted PLAYZA workload, production migration, live charge or store submission occurred.
 
 ## Delivered
 
@@ -57,3 +57,7 @@ Most recent all-platform export: `/private/tmp/playza-release-final-20261106` (n
 - RELEASE_CHECKLIST.md: gates for staging and production.
 
 Final verification follow-up: all-platform export completed at `/private/tmp/playza-release-final-20261106`; final credential-safe backup wrapper restored successfully into `playza_restore_final_20261106` with six migration records. Backend lint and whitespace checks pass. Two restore-wrapper invocation defects discovered during rehearsal were fixed and the final script rerun successfully; no shared application data was modified.
+
+## Phase 2 superseding status
+
+The local-preparation evidence above is historical. Current staging evidence is in **STAGING_VALIDATION.md**. Docker builds and isolated Compose runtime/backup/recovery now pass. Render MCP access and EAS login/project linkage work; Android staging keystore exists. Hosted Render provisioning remains blocked by missing billing. Signed mobile releases, Apple signing, real capture/refund/webhook, push/maps/device QA and hosted alerts/load/recovery remain unverified. Security remediation removed all high/moderate findings: current backend production audit is zero, full backend tree five low and mobile fourteen low, propagated from unpatched deepmerge. Separate source branches are published; legacy main/service remain separate.

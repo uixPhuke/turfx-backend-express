@@ -68,3 +68,7 @@ temp/
 
 .env.release
 release-artifacts/
+
+# All local secret environments
+.env*
+!.env.example

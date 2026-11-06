@@ -27,3 +27,7 @@ Authenticated image upload enforces file count/size/signatures and delegates ima
 5. Full abuse, sustained load, two-replica reconnect, physical-device storage/permission and actual payment-provider tests remain staging gates.
 
 No `.env` secret files were found in tracked backend paths (only `.env.example` is tracked). This check does not certify the entire historical Git history; perform a credential scan on the published release and rotate any historically leaked secrets.
+
+## Phase 2 advisory remediation
+
+The advisory counts in the original review are superseded. Effect 3.22.4 / DeepmergeTS 8.0.2 and scoped Glob 14.0.4 / Minimatch 11.0.5 overrides pass regression checks. Patched image-size 2.0.4 requires a reproducible Metro adapter for its named export and buffer/path calls; all platform exports and Expo Doctor pass. Current npm snapshot: backend production zero findings, full backend five low, mobile fourteen low; no high/moderate/critical. The remaining root advisory is deepmerge 4.3.1 prototype poisoning (no newer registry release found). Trusted build/config inputs and explicit low-risk disposition remain necessary. Actual private mobile and isolated backend staging publication excluded secret files; broader historical secret scanning remains a release gate.

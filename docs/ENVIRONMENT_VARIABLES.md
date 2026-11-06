@@ -28,6 +28,8 @@ Never store secrets in Git, mobile public variables, images, logs or CI artifact
 | REDIS_SERVER_BIN | local process test | optional path, default redis-server | /usr/bin/redis-server |
 | PLAYZA_TEST_DATABASE_URL | test runner | isolated loopback PostgreSQL port 55439 only; never staging/prod | postgresql://playza:fixture@127.0.0.1:55439/playza_test |
 | PLAYZA_SMOKE_URL | smoke script | HTTPS staging base ending /api/v2 | https://api-staging.example.com/api/v2 |
+| PLAYZA_ENV_FILE | Compose | optional path to private service environment file, default .env.release | /secure/playza-staging.env |
+| PLAYZA_MIGRATION_READ_ONLY | inventory script | explicit yes enables authorized read-only MongoDB inventory | yes |
 | POSTGRES_PASSWORD | Compose | required URL-safe generated password | replace-with-random-hex |
 | API_DOMAIN | optional Caddy | DNS name for self-hosted TLS | api-staging.example.com |
 | BACKUP_DIR | backup script | private encrypted storage directory | /secure/backups |
