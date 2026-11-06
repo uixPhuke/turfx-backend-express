@@ -4,6 +4,10 @@ const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
   secure: false,
+  requireTLS: true,
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -29,7 +33,7 @@ const verifyMailConnection = async () => {
 const sendEmail = async ({ to, subject, html }) => {
   try {
     const info = await transporter.sendMail({
-      from: `"TurfX" <${process.env.EMAIL_USER}>`,
+      from: `"PLAYZA" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,

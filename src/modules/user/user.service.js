@@ -157,11 +157,14 @@ const updateAvatar = async (userId, file) => {
 // Delete Account (Soft Delete)
 // ==========================================
 
-const deleteAccount = async (userId) => {
-  const user = await User.findById(userId);
+const deleteAccount = async (userId, password) => {
+  const user = await User.findById(userId).select("+password");
 
   if (!user) {
     throw new ApiError(404, "User not found");
+  }
+  if (!(await user.comparePassword(password))) {
+    throw new ApiError(401, "Invalid password");
   }
 
   if (user.avatar?.public_id) {
@@ -169,6 +172,7 @@ const deleteAccount = async (userId) => {
   }
 
   user.isDeleted = true;
+  user.tokenVersion += 1;
   user.refreshToken = null;
 
   await user.save();
@@ -406,6 +410,8 @@ const permanentlyDeleteUser = async (userId) => {
 };
 
 module.exports = {
+  applyForOwner,
+  getOwnerStatus,
   // User
   getMyProfile,
   updateProfile,

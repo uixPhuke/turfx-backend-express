@@ -26,9 +26,13 @@ jest.mock("razorpay", () => {
     },
 
     payments: {
+      refund: jest.fn().mockResolvedValue({ id: "rfnd_test_123", status: "processed" }),
       fetch: jest.fn().mockResolvedValue({
         id: "pay_test_123",
         status: "captured",
+          order_id: "order_test_123",
+          amount: 110000,
+          currency: "INR",
       }),
     },
 

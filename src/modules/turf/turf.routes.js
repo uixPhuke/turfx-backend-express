@@ -40,6 +40,15 @@ router.get(
   turfController.getNearbyTurfs
 );
 
+// Get My Turfs
+router.get(
+  "/mine",
+  auth,
+  authorize("owner"),
+  turfController.getMyTurfs
+);
+
+
 // Get Turf Details
 router.get(
   "/:id",
@@ -71,14 +80,6 @@ router.post(
   validate,
   turfController.createTurf
 );
-// Get My Turfs
-router.get(
-  "/mine",
-  auth,
-  authorize("owner"),
-  turfController.getMyTurfs
-);
-
 // Update Turf
 router.patch(
   "/:id",

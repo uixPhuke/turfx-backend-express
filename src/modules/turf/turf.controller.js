@@ -12,8 +12,6 @@ const asyncHandler = require("../../middlewares/async.middleware");
 // ==========================================
 
 const createTurf = asyncHandler(async (req, res) => {
-  console.log("REQ BODY:", req.body);
-  console.log("REQ FILES:", req.files);
 
   if (!req.files || req.files.length === 0) {
     throw new ApiError(400, "At least one turf image is required");

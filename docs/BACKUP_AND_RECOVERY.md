@@ -1,0 +1,15 @@
+# Backup and recovery
+
+Use provider-managed encrypted continuous backups/PITR where the selected paid database plan supports it; verify actual retention and restore support in the account. Do not infer backups from a Blueprint file. Proposed starting objectives: RPO <=15 minutes and RTO <=2 hours, subject to measured rehearsal and business acceptance.
+
+Schedule daily custom-format logical backups, retain 7 daily / 4 weekly / 12 monthly copies in encrypted off-host object storage, and enforce retention through storage lifecycle rules. Keep database credentials in a restricted scheduler environment, and alert on missed or failed jobs. Restrict backup access; dumps contain private user/conversation data. Encrypt transport and storage, separate backup access from application access, and verify checksums after transfer. The provided script creates backups but does not provision a scheduler or off-host storage.
+
+Backup: `DATABASE_URL=<direct-url> BACKUP_DIR=<encrypted-directory> bash scripts/database-backup.sh`. Use a PostgreSQL client matching or newer than the server. The script writes atomically, validates the archive listing and produces SHA-256. It never deletes old backups.
+
+Restore rehearsal: verify the checksum, provision an empty **isolated** PostgreSQL 18 database with required extensions available, then `RESTORE_DATABASE_URL=<new-db> RESTORE_CONFIRM_EMPTY=yes bash scripts/database-restore.sh <dump>`. Restore refuses any public tables and runs in one transaction. Do not point the application or payment worker at the restored database during inspection: duplicate external side effects must be prevented.
+
+Validate migration records, row counts, foreign keys, exclusion/check constraints, immutable audit triggers, booking capacity, ledger/refund totals and representative authenticated reads. Record duration, backup age and achieved RPO/RTO. Rehearse monthly and after schema/platform changes.
+
+Incident: restrict writes, preserve logs and the failed database, choose a restore point, restore to a new database, reconcile Razorpay events since that point, invalidate uncertain sessions if needed, and switch API/worker together. Confirm payment reconciliation before reopening bookings. Redis is not the booking source of truth: restore/recreate cache carefully, accepting rate-limit resets and socket reconnects. Cloudinary assets need separate export/retention policies; a SQL dump contains URLs, not image bytes. Signing keys, infrastructure secrets and DNS configuration require separately encrypted recovery records.
+
+The backup host needs Node.js plus PostgreSQL client tools. `database-client.cjs` parses the direct URL into libpq environment fields so passwords are not passed in process arguments. Supported connection options include sslmode, sslrootcert and connect_timeout; use a direct PostgreSQL URL rather than Prisma-only pool parameters for recovery tools. The final credential-safe wrapper was exercised with a second isolated restore and six migration records were verified.

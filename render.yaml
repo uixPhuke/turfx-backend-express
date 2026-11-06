@@ -1,0 +1,106 @@
+# Separate PostgreSQL deployment. Does not adopt the existing MongoDB service.
+services:
+  - type: web
+    name: playza-api
+    runtime: node
+    region: oregon
+    plan: 0.5c-512mb
+    autoDeployTrigger: "off"
+    buildCommand: npm ci --include=dev && npm run db:generate && npm run build:foundation
+    preDeployCommand: npm run db:migrate:deploy
+    startCommand: node .playza-build/postgres/server.js
+    healthCheckPath: /api/v2/ready
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: APP_ENV
+        value: staging
+      - key: NODE_ENV
+        value: production
+      - key: POSTGRES_API_PORT
+        value: "10000"
+      - key: TRUST_PROXY_HOPS
+        value: "1"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: playza-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: playza-redis
+          type: keyvalue
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REFRESH_TOKEN_SECRET
+        generateValue: true
+      - key: OTP_SECRET
+        generateValue: true
+      - key: BOOKING_TAX_BPS
+        value: "0"
+      - key: BOOKING_FEE_MINOR
+        value: "0"
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+  - type: worker
+    name: playza-worker
+    runtime: node
+    region: oregon
+    plan: 0.5c-512mb
+    autoDeployTrigger: "off"
+    buildCommand: npm ci --include=dev && npm run db:generate && npm run build:foundation
+    startCommand: npm run start:worker
+    envVars:
+      - key: EXPO_ACCESS_TOKEN
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        fromService:
+          name: playza-api
+          type: web
+          envVarKey: RAZORPAY_KEY_ID
+      - key: RAZORPAY_KEY_SECRET
+        fromService:
+          name: playza-api
+          type: web
+          envVarKey: RAZORPAY_KEY_SECRET
+      - key: NODE_VERSION
+        value: "22"
+      - key: APP_ENV
+        value: staging
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: playza-postgres
+          property: connectionString
+  - type: keyvalue
+    name: playza-redis
+    region: oregon
+    plan: 256mb
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+databases:
+  - name: playza-postgres
+    region: oregon
+    plan: 0.1c-256mb
+    databaseName: playza
+    user: playza
+    postgresMajorVersion: '18'
+    ipAllowList: []

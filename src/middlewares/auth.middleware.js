@@ -14,11 +14,12 @@ const authMiddleware = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] });
 
     const user = await User.findById(decoded.id);
 
-    if (!user) {
+    if (!user || user.isDeleted || decoded.type !== "access" || decoded.realm !== "user" ||
+        decoded.version !== (user.tokenVersion || 0)) {
       return res.status(401).json({
         success: false,
         message: "User not found.",

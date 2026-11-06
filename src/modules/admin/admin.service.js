@@ -14,6 +14,7 @@ const User = require("../user/user.model");
 const {
   generateAccessToken,
   generateRefreshToken,
+  hashToken,
 } = require("../../utils/generateToken");
 
 // ==========================================
@@ -30,16 +31,19 @@ const generateAuthResponse = async (
     generateAccessToken({
       id: admin._id,
       role: admin.role,
+      realm: "admin",
+      version: admin.tokenVersion || 0,
     });
 
   const refreshToken =
     generateRefreshToken({
       id: admin._id,
       role: admin.role,
+      realm: "admin",
+      version: admin.tokenVersion || 0,
     });
 
-  admin.refreshToken =
-    refreshToken;
+  admin.refreshToken = hashToken(refreshToken);
 
   admin.lastLoginAt =
     new Date();
@@ -197,86 +201,19 @@ const loginAdmin = async (
 // Refresh Access Token
 // ==========================================
 
-const refreshAccessToken = async (
-  refreshToken
-) => {
-
-  if (!refreshToken) {
-
-    throw new ApiError(
-      401,
-      "Refresh token is required"
-    );
-
-  }
-
-  let payload;
-
-  try {
-
-    payload = jwt.verify(
-      refreshToken,
-      process.env.JWT_REFRESH_SECRET
-    );
-
-  } catch (error) {
-
-    throw new ApiError(
-      401,
-      "Invalid or expired refresh token"
-    );
-
-  }
-
-  const admin =
-    await Admin.findById(
-      payload.id
-    ).select("+refreshToken");
-
-  if (
-    !admin ||
-    admin.isDeleted
-  ) {
-
-    throw new ApiError(
-      404,
-      "Admin not found"
-    );
-
-  }
-
-  if (
-    admin.refreshToken !==
-    refreshToken
-  ) {
-
-    throw new ApiError(
-      401,
-      "Invalid refresh token"
-    );
-
-  }
-
-  const accessToken =
-    generateAccessToken({
-
-      id: admin._id,
-
-      role: admin.role,
-
-    });
-
-  return {
-
-    accessToken,
-
-  };
-
+const refreshAccessToken = async (refreshToken) => {
+  if (typeof refreshToken !== "string") throw new ApiError(401, "Refresh token is required");
+  const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, { algorithms: ["HS256"] });
+  if (payload.type !== "refresh" || payload.realm !== "admin") throw new ApiError(401, "Invalid refresh token");
+  const replacement = generateRefreshToken({ id: payload.id, role: payload.role, realm: "admin" });
+  const admin = await Admin.findOneAndUpdate({ _id: payload.id,
+    refreshToken: hashToken(refreshToken), isActive: true, isDeleted: false,
+  }, { $set: { refreshToken: hashToken(replacement) } }, { new: true });
+  if (!admin) throw new ApiError(401, "Invalid or revoked refresh token");
+  return { accessToken: generateAccessToken({ id: admin._id, role: admin.role,
+      realm: "admin",
+    version: admin.tokenVersion || 0 }), refreshToken: replacement };
 };
-
-// ==========================================
-// Logout Admin
-// ==========================================
 
 const logoutAdmin = async (
   adminId
@@ -297,6 +234,7 @@ const logoutAdmin = async (
   }
 
   admin.refreshToken = null;
+  admin.tokenVersion = (admin.tokenVersion || 0) + 1;
 
   await admin.save();
 
@@ -371,6 +309,7 @@ const changePassword = async (
 
   // Invalidate existing refresh token
   admin.refreshToken = null;
+  admin.tokenVersion = (admin.tokenVersion || 0) + 1;
 
   await admin.save();
 

@@ -25,7 +25,7 @@ const adminRoutes = require("../modules/admin/admin.routes");
 router.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "TurfX API v1",
+    message: "PLAYZA API v1",
     version: "1.0.0",
     timestamp: new Date(),
   });

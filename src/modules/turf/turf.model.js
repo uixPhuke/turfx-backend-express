@@ -448,11 +448,12 @@ turfSchema.set("toObject", {
 // Query Middleware
 // ==========================================
 
+turfSchema.index({ location: "2dsphere" });
+turfSchema.index({ name: "text", description: "text", "address.city": "text" });
+
 // Hide deleted turfs automatically
 turfSchema.pre(/^find/, function () {
-  this.where({
-    isDeleted: false,
-  });
+  if (!this.getOptions().includeDeleted) this.where({ isDeleted: false });
 });
 // ==========================================
 // Instance Method

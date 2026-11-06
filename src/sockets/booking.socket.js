@@ -1,236 +1,30 @@
-// src/socket/booking.socket.js
+const Turf = require("../modules/turf/turf.model");
+const slotService = require("../modules/slot/slot.service");
+const mongoose = require("mongoose");
 
-const Booking = require("../modules/booking/booking.model");
-const Slot = require("../modules/slot/slot.model");
-
-// ==========================================
-// Booking Socket
-// ==========================================
-
-const registerBookingSocket = (
-  io,
-  socket
-) => {
-
-  // ========================================
-  // Join Turf Room
-  // ========================================
-
-  socket.on(
-    "booking:join-turf",
-    async (turfId) => {
-
-      socket.join(
-        `turf:${turfId}`
-      );
-
-      socket.emit(
-        "booking:joined",
-        {
-          turfId,
-        }
-      );
-
-    }
-  );
-
-  // ========================================
-  // Leave Turf Room
-  // ========================================
-
-  socket.on(
-    "booking:leave-turf",
-    (turfId) => {
-
-      socket.leave(
-        `turf:${turfId}`
-      );
-
-    }
-  );
-
-  // ========================================
-  // Get Live Slots
-  // ========================================
-
-  socket.on(
-    "booking:get-slots",
-    async ({
-      turfId,
-      date,
-    }) => {
-
-      try {
-
-        const slots =
-          await Slot.find({
-
-            turf: turfId,
-
-            date,
-
-          });
-
-        socket.emit(
-          "booking:slots",
-          slots
-        );
-
-      } catch (error) {
-
-        socket.emit(
-          "booking:error",
-          error.message
-        );
-
+module.exports = (io, socket) => {
+  const approvedTurf = async (id) => {
+    if (!mongoose.isValidObjectId(id)) throw new Error("Invalid turf ID");
+    const turf = await Turf.findOne({ _id: id, isApproved: true, isActive: true });
+    if (!turf) throw new Error("Turf unavailable");
+    return turf;
+  };
+  socket.on("booking:join-turf", async (turfId) => {
+    try {
+      await approvedTurf(turfId);
+      await socket.join(`turf:${turfId}`);
+      socket.emit("booking:joined", { turfId });
+    } catch (error) { socket.emit("booking:error", { message: error.message }); }
+  });
+  socket.on("booking:leave-turf", (turfId) => socket.leave(`turf:${turfId}`));
+  socket.on("booking:get-slots", async ({ turfId, date } = {}) => {
+    try {
+      await approvedTurf(turfId);
+      if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date))) {
+        throw new Error("Invalid date");
       }
-
-    }
-  );
-
-  // ========================================
-  // Booking Created
-  // ========================================
-
-  socket.on(
-    "booking:created",
-    async ({
-      bookingId,
-    }) => {
-
-      try {
-
-        const booking =
-          await Booking.findById(
-            bookingId
-          )
-            .populate("slot")
-            .populate("user");
-
-        if (!booking) {
-          return;
-        }
-
-        io.to(
-          `turf:${booking.slot.turf}`
-        ).emit(
-          "booking:new",
-          booking
-        );
-
-      } catch (error) {
-
-        socket.emit(
-          "booking:error",
-          error.message
-        );
-
-      }
-
-    }
-  );
-
-  // ========================================
-  // Booking Cancelled
-  // ========================================
-
-  socket.on(
-    "booking:cancelled",
-    async ({
-      bookingId,
-    }) => {
-
-      try {
-
-        const booking =
-          await Booking.findById(
-            bookingId
-          ).populate("slot");
-
-        if (!booking) {
-          return;
-        }
-
-        io.to(
-          `turf:${booking.slot.turf}`
-        ).emit(
-          "booking:cancelled",
-          {
-
-            bookingId,
-
-            slot: booking.slot,
-
-          }
-
-        );
-
-      } catch (error) {
-
-        socket.emit(
-          "booking:error",
-          error.message
-        );
-
-      }
-
-    }
-  );
-
-  // ========================================
-  // Slot Updated
-  // ========================================
-
-  socket.on(
-    "booking:update-slot",
-    ({
-      turfId,
-      slotId,
-      status,
-    }) => {
-
-      io.to(
-        `turf:${turfId}`
-      ).emit(
-        "booking:slot-updated",
-        {
-
-          slotId,
-
-          status,
-
-        }
-      );
-
-    }
-  );
-
-  // ========================================
-  // Booking Confirmed
-  // ========================================
-
-  socket.on(
-    "booking:confirmed",
-    ({
-      bookingId,
-      turfId,
-    }) => {
-
-      io.to(
-        `turf:${turfId}`
-      ).emit(
-        "booking:confirmed",
-        {
-
-          bookingId,
-
-        }
-      );
-
-    }
-  );
-
+      socket.emit("booking:slots", await slotService.getAvailableSlots(turfId, date));
+    } catch (error) { socket.emit("booking:error", { message: error.message }); }
+  });
+  // Booking/payment mutations and broadcasts originate from authorized server services only.
 };
-
-module.exports =
-  registerBookingSocket;

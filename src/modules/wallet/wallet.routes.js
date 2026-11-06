@@ -82,7 +82,7 @@ router.post(
   auth,
   withdrawValidation,
   validate,
-  walletController.debitWallet
+  walletController.withdraw
 );
 
 // ======================================================

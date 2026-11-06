@@ -55,7 +55,9 @@ app.use(corsMiddleware);
 
 app.use(compressionMiddleware);
 
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "1mb", verify(req, res, buffer) {
+  if (req.originalUrl.split("?")[0] === "/api/v1/payments/webhook") req.rawBody = Buffer.from(buffer);
+} }));
 
 app.use(
   express.urlencoded({
@@ -66,7 +68,7 @@ app.use(
 
 app.use(mongoSanitizeMiddleware);
 
-app.use(xssMiddleware);
+// Escape content at rendering boundaries; do not mutate passwords or signed payloads.
 
 app.use(hppMiddleware);
 
@@ -85,7 +87,7 @@ swaggerDocs(app);
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Welcome to TurfX API",
+    message: "Welcome to PLAYZA API",
   });
 });
 

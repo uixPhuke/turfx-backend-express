@@ -25,3 +25,9 @@ README.md
 tests
 
 .github
+.env.*
+!.env.example
+
+.playza-build
+release-artifacts
+legacy

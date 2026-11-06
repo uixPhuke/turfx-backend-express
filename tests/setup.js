@@ -1,10 +1,13 @@
-const dotenv = require("dotenv");
+// All tests use synthetic credentials and disposable database instances.
+// Never load developer or deployed environment files into test processes.
+Object.assign(process.env, {
+  NODE_ENV: "test", JWT_SECRET: "playza-test-access-secret-not-for-production",
+  REFRESH_TOKEN_SECRET: "playza-test-refresh-secret-not-for-production",
+  JWT_EXPIRE: "15m", REFRESH_TOKEN_EXPIRE: "7d",
+  RAZORPAY_KEY_ID: "rzp_test_fixture", RAZORPAY_KEY_SECRET: "playza-test-payment-secret",
+  RAZORPAY_WEBHOOK_SECRET: "playza-test-webhook-secret", LOG_LEVEL: "silent",
+});
 
-const result = dotenv.config({ path: ".env.test" });
-
-console.log("DOTENV RESULT:", result);
-
-console.log("JWT_SECRET:", process.env.JWT_SECRET);
 jest.mock("../src/utils/sendEmail", () => ({
   sendEmail: jest.fn().mockResolvedValue(true),
   verifyMailConnection: jest.fn(),

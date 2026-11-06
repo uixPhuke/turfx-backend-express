@@ -306,100 +306,9 @@ await booking.save();
 // Verify Razorpay Payment
 // ==========================================
 
-const verifyPayment = async (data) => {
-
-  const {
-    bookingId,
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature,
-  } = data;
-
-  // ========================================
-  // Booking
-  // ========================================
-
-  const booking = await Booking.findById(
-    bookingId
-  );
-
-  if (!booking) {
-    throw new ApiError(
-      404,
-      "Booking not found"
-    );
-  }
-
-  if (
-    booking.payment.status === "paid"
-  ) {
-    throw new ApiError(
-      400,
-      "Payment already verified"
-    );
-  }
-
-  // ========================================
-  // Verify Signature
-  // ========================================
-
-  const body =
-    razorpay_order_id +
-    "|" +
-    razorpay_payment_id;
-
-  const expectedSignature =
-    crypto
-      .createHmac(
-        "sha256",
-        process.env.RAZORPAY_KEY_SECRET
-      )
-      .update(body)
-      .digest("hex");
-
-  if (
-    expectedSignature !==
-    razorpay_signature
-  ) {
-
-    booking.payment.status =
-      "failed";
-
-    await booking.save();
-
-    throw new ApiError(
-      400,
-      "Invalid payment signature"
-    );
-
-  }
-
-  // ========================================
-  // Update Payment
-  // ========================================
-
-  booking.payment.paymentId =
-    razorpay_payment_id;
-
-  booking.payment.orderId =
-    razorpay_order_id;
-
-  booking.payment.signature =
-    razorpay_signature;
-
-  booking.payment.status =
-    "paid";
-
-  booking.payment.paidAt =
-    new Date();
-
-  booking.bookingStatus =
-    "confirmed";
-
-  await booking.save();
-
-  return booking;
-
+const verifyPayment = async (data, actorId) => {
+  const result = await require("../payment/payment.service").verifyPayment(data, actorId);
+  return result.booking;
 };
 
 // ==========================================
@@ -577,65 +486,12 @@ const cancelBooking = async (
 // Refund Booking
 // ==========================================
 
-const refundBooking = async (
-  bookingId
-) => {
-
-  const booking =
-    await Booking.findById(
-      bookingId
-    );
-
-  if (!booking) {
-    throw new ApiError(
-      404,
-      "Booking not found"
-    );
-  }
-
-  if (
-    booking.refund.status !==
-    "pending"
-  ) {
-    throw new ApiError(
-      400,
-      "Refund is not pending"
-    );
-  }
-
-  /*
-  ==========================================
-  Razorpay Refund
-
-  const refund =
-    await razorpay.payments.refund(
-      booking.payment.paymentId,
-      {
-        amount:
-          booking.refund.amount * 100,
-      }
-    );
-
-  booking.refund.refundId =
-    refund.id;
-  ==========================================
-  */
-
-  booking.refund.status =
-    "processed";
-
-  booking.refund.refundedAt =
-    new Date();
-
-  booking.payment.status =
-    "refunded";
-
-  await booking.save();
-
-  return booking;
-
+const refundBooking = async (bookingId) => {
+  const Payment = require("../payment/payment.model");
+  const payment = await Payment.findOne({ booking: bookingId, isDeleted: false });
+  if (!payment) throw new ApiError(404, "Payment not found");
+  return require("../payment/payment.service").refundPayment(payment._id);
 };
-
 // ==========================================
 // Get Booking By ID
 // ==========================================
@@ -885,9 +741,12 @@ const getOwnerBookings = async (
 
 const getTurfBookings = async (
   turfId,
-  query = {}
+  query = {},
+  ownerId
 ) => {
 
+  const turf = await Turf.findById(turfId);
+  if (!turf || String(turf.owner) !== String(ownerId)) throw new ApiError(403, "Unauthorized turf access");
   const {
     page = 1,
     limit = 20,
@@ -1090,7 +949,7 @@ const getOwnerDashboard =
 // ==========================================
 
 const completeBooking = async (
-  bookingId
+  bookingId, ownerId
 ) => {
 
   const booking =
@@ -1105,6 +964,7 @@ const completeBooking = async (
     );
   }
 
+  if (String(booking.owner) !== String(ownerId)) throw new ApiError(403, "Unauthorized booking access");
   if (
     booking.bookingStatus !==
     "confirmed"

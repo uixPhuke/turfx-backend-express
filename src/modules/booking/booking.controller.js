@@ -35,7 +35,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
 
   const booking =
     await bookingService.verifyPayment(
-      req.body
+      req.body, req.user._id
     );
 
   return res.status(200).json(
@@ -186,7 +186,7 @@ const getTurfBookings = asyncHandler(async (req, res) => {
   const bookings =
     await bookingService.getTurfBookings(
       req.params.turfId,
-      req.query
+      req.query, req.user._id
     );
 
   return res.status(200).json(
@@ -274,7 +274,7 @@ const completeBooking = asyncHandler(async (req, res) => {
 
   const booking =
     await bookingService.completeBooking(
-      req.params.id
+      req.params.id, req.user._id
     );
 
   return res.status(200).json(

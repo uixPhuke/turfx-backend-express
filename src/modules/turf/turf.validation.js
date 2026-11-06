@@ -6,7 +6,6 @@ const { body, param, query } = require("express-validator");
 
 const createTurfValidation = [
   (req, res, next) => {
-    console.log("BODY:", req.body);
     next();
   },
   // ======================================

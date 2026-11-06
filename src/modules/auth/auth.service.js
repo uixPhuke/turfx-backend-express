@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { hashOTP, verifyOTP } = require("../../utils/otpSecret");
 const User = require("../user/user.model");
 const Otp = require("./otp.model");
 const ApiError = require("../../utils/ApiError");
@@ -18,6 +19,7 @@ const { generateOTP, getOTPExpiry } = require("../../utils/generateOTP");
 const {
   generateAccessToken,
   generateRefreshToken,
+  hashToken,
 } = require("../../utils/generateToken");
 
 
@@ -57,6 +59,7 @@ const register = async (data) => {
 const accessToken = generateAccessToken({
   id: user._id,
   role: user.role,
+  version: user.tokenVersion || 0,
 });
 
 const refreshToken = generateRefreshToken({
@@ -64,7 +67,7 @@ const refreshToken = generateRefreshToken({
 });
 
 // Save refresh token
-user.refreshToken = refreshToken;
+user.refreshToken = hashToken(refreshToken);
 await user.save();
 
   // Delete previous OTP
@@ -79,7 +82,7 @@ await user.save();
   await Otp.create({
     user: user._id,
     email,
-    otp,
+    otp: hashOTP(otp),
     purpose: "EMAIL_VERIFICATION",
     expiresAt: getOTPExpiry(),
   });
@@ -87,9 +90,9 @@ await user.save();
   // Send Email
   await sendEmail({
     to: email,
-    subject: "Verify your TurfX account",
+    subject: "Verify your PLAYZA account",
     html: `
-      <h2>Welcome to TurfX</h2>
+      <h2>Welcome to PLAYZA</h2>
 
       <p>Your verification OTP is</p>
 
@@ -120,8 +123,8 @@ const login = async (
 
 
 
- 
-if (!user) {
+
+if (!user || user.isDeleted) {
   throw new ApiError(401, "Invalid email or password");
 }
 
@@ -143,14 +146,14 @@ if (user.isBlocked) {
   const accessToken = generateAccessToken({
   id: user._id,
   role: user.role,
+  version: user.tokenVersion || 0,
 });
 
 const refreshToken = generateRefreshToken({
   id: user._id,
 });
 
-  user.refreshToken =
-    refreshToken;
+  user.refreshToken = hashToken(refreshToken);
 
   await user.save();
 
@@ -171,7 +174,7 @@ const getCurrentUser =
       await User.findById(userId);
 
     if (!user) {
-      throw new Error(
+      throw new ApiError(400,
         "User not found"
       );
     }
@@ -183,48 +186,19 @@ const getCurrentUser =
 // Refresh Token
 // ==========================================
 
-const refreshAccessToken =
-  async (refreshToken) => {
-    if (!refreshToken) {
-      throw new Error(
-        "Refresh token is required"
-      );
-    }
-
-    const decoded =
-      jwt.verify(
-        refreshToken,
-        process.env
-          .REFRESH_TOKEN_SECRET
-      );
-
-    const user =
-      await User.findById(
-        decoded.id
-      ).select("+refreshToken");
-
-    if (!user) {
-      throw new Error(
-        "User not found"
-      );
-    }
-
-    if (
-      user.refreshToken !==
-      refreshToken
-    ) {
-      throw new Error(
-        "Invalid refresh token"
-      );
-    }
-
-    return {
-  accessToken: generateAccessToken({
-    id: user._id,
-    role: user.role,
-  }),
+const refreshAccessToken = async (refreshToken) => {
+  if (typeof refreshToken !== "string") throw new ApiError(401, "Refresh token is required");
+  const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, { algorithms: ["HS256"] });
+  if (decoded.type !== "refresh" || decoded.realm !== "user") throw new ApiError(401, "Invalid refresh token");
+  const replacement = generateRefreshToken({ id: decoded.id });
+  // Compare-and-swap ensures simultaneous refresh requests cannot both rotate a token.
+  const user = await User.findOneAndUpdate({
+    _id: decoded.id, refreshToken: hashToken(refreshToken), isBlocked: false, isDeleted: false,
+  }, { $set: { refreshToken: hashToken(replacement) } }, { new: true });
+  if (!user) throw new ApiError(401, "Invalid or revoked refresh token");
+  return { accessToken: generateAccessToken({ id: user._id, role: user.role,
+    version: user.tokenVersion || 0 }), refreshToken: replacement };
 };
-  };
 
 // ==========================================
 // Logout
@@ -239,12 +213,13 @@ const logout = async (
     ).select("+refreshToken");
 
   if (!user) {
-    throw new Error(
+    throw new ApiError(400,
       "User not found"
     );
   }
 
   user.refreshToken = null;
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
 
   await user.save();
 
@@ -259,7 +234,7 @@ const forgotPassword = async (email) => {
   const user = await User.findOne({ email });
 
   if (!user) {
-    throw new Error("User not found");
+    throw new ApiError(400, "User not found");
   }
 
   // Delete old OTP
@@ -275,7 +250,7 @@ const forgotPassword = async (email) => {
   await Otp.create({
     user: user._id,
     email,
-    otp,
+    otp: hashOTP(otp),
     purpose: "FORGOT_PASSWORD",
     expiresAt: getOTPExpiry(),
   });
@@ -283,7 +258,7 @@ const forgotPassword = async (email) => {
   // Send Email
   await sendEmail({
     to: email,
-    subject: "Reset Your TurfX Password",
+    subject: "Reset Your PLAYZA Password",
     html: `
       <h2>Password Reset Request</h2>
 
@@ -306,40 +281,21 @@ const forgotPassword = async (email) => {
 // Verify OTP
 // ==========================================
 
-const verifyOtp = async (email, otp, purpose) => {
-  const otpData = await Otp.findOne({
-    email,
-    purpose,
-  });
+const attemptChallenge = async (email, purpose) => {
+  const challenge = await Otp.findOneAndUpdate({ email, purpose,
+    expiresAt: { $gt: new Date() }, attempts: { $lt: 5 } },
+    { $inc: { attempts: 1 } }, { returnDocument: "after" }).select("+otp");
+  if (!challenge) throw new ApiError(400, "OTP is invalid, expired or attempts exhausted");
+  return challenge;
+};
 
-  if (!otpData) {
-    throw new Error("OTP not found");
-  }
-
-  if (otpData.expiresAt < new Date()) {
-    await otpData.deleteOne();
-    throw new Error("OTP has expired");
-  }
-
-  otpData.attempts += 1;
-
-  if (otpData.attempts > 5) {
-    await otpData.deleteOne();
-    throw new Error("Too many invalid attempts");
-  }
-
-  if (otpData.otp !== otp) {
-    await otpData.save();
-    throw new Error("Invalid OTP");
-  }
-
-  otpData.verified = true;
-
-  await otpData.save();
-
-  return {
-    message: "OTP verified successfully",
-  };
+const verifyOtp = async (email, otp, purpose = "FORGOT_PASSWORD") => {
+  const challenge = await attemptChallenge(email, purpose);
+  if (!verifyOTP(otp, challenge.otp)) throw new ApiError(400, "Invalid OTP");
+  // Conditional update cannot recreate a challenge concurrently consumed or replaced.
+  const result = await Otp.updateOne({ _id: challenge._id, otp: challenge.otp }, { $set: { verified: true } });
+  if (result.matchedCount !== 1) throw new ApiError(400, "OTP is no longer available");
+  return { message: "OTP verified successfully" };
 };
 
 // ==========================================
@@ -347,43 +303,16 @@ const verifyOtp = async (email, otp, purpose) => {
 // ==========================================
 
 const resetPassword = async (email, otp, newPassword) => {
-  const user = await User.findOne({ email }).select("+password");
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
-  const otpData = await Otp.findOne({
-    email,
-    purpose: "FORGOT_PASSWORD",
-  });
-
-  if (!otpData) {
-    throw new Error("OTP not found");
-  }
-
-  if (otpData.expiresAt < new Date()) {
-    await otpData.deleteOne();
-    throw new Error("OTP has expired");
-  }
-
-  if (!otpData.verified) {
-    throw new Error("Please verify your OTP first");
-  }
-
-  if (otpData.otp !== otp) {
-    throw new Error("Invalid OTP");
-  }
-
+  const user = await User.findOne({ email, isDeleted: false, isBlocked: false }).select("+password");
+  if (!user) throw new ApiError(400, "Invalid password reset request");
+  const challenge = await Otp.findOneAndDelete({ email, purpose: "FORGOT_PASSWORD",
+    verified: true, otp: hashOTP(otp), expiresAt: { $gt: new Date() } });
+  if (!challenge) throw new ApiError(400, "OTP is invalid, expired or not verified");
   user.password = newPassword;
-
+  user.refreshToken = null;
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
   await user.save();
-
-  await otpData.deleteOne();
-
-  return {
-    message: "Password reset successfully",
-  };
+  return { message: "Password reset successfully" };
 };
 
 // ==========================================
@@ -398,16 +327,18 @@ const changePassword = async (
   const user = await User.findById(userId).select("+password");
 
   if (!user) {
-    throw new Error("User not found");
+    throw new ApiError(400, "User not found");
   }
 
   const isMatch = await user.comparePassword(oldPassword);
 
   if (!isMatch) {
-    throw new Error("Old password is incorrect");
+    throw new ApiError(400, "Old password is incorrect");
   }
 
   user.password = newPassword;
+  user.refreshToken = null;
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
 
   await user.save();
 
@@ -421,38 +352,15 @@ const changePassword = async (
 // ==========================================
 
 const verifyEmail = async (email, otp) => {
-  const user = await User.findOne({ email });
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
-  const otpData = await Otp.findOne({
-    email,
-    purpose: "EMAIL_VERIFICATION",
-  });
-
-  if (!otpData) {
-    throw new Error("OTP not found");
-  }
-
-  if (otpData.expiresAt < new Date()) {
-    await otpData.deleteOne();
-    throw new Error("OTP has expired");
-  }
-
-  if (otpData.otp !== otp) {
-    throw new Error("Invalid OTP");
-  }
-
+  const challenge = await attemptChallenge(email, "EMAIL_VERIFICATION");
+  if (!verifyOTP(otp, challenge.otp)) throw new ApiError(400, "Invalid OTP");
+  const consumed = await Otp.findOneAndDelete({ _id: challenge._id, otp: challenge.otp });
+  if (!consumed) throw new ApiError(400, "OTP is no longer available");
+  const user = await User.findOne({ email, isDeleted: false, isBlocked: false });
+  if (!user) throw new ApiError(400, "Invalid email verification request");
   user.isVerified = true;
   await user.save();
-
-  await otpData.deleteOne();
-
-  return {
-    message: "Email verified successfully",
-  };
+  return { message: "Email verified successfully" };
 };
 
 // ==========================================
@@ -463,11 +371,11 @@ const resendVerificationEmail = async (email) => {
   const user = await User.findOne({ email });
 
   if (!user) {
-    throw new Error("User not found");
+    throw new ApiError(400, "User not found");
   }
 
   if (user.isVerified) {
-    throw new Error("Email is already verified");
+    throw new ApiError(400, "Email is already verified");
   }
 
   // Delete old OTP
@@ -482,7 +390,7 @@ const resendVerificationEmail = async (email) => {
   await Otp.create({
     user: user._id,
     email,
-    otp,
+    otp: hashOTP(otp),
     purpose: "EMAIL_VERIFICATION",
     expiresAt: getOTPExpiry(),
   });
@@ -490,7 +398,7 @@ const resendVerificationEmail = async (email) => {
   // Send email
   await sendEmail({
     to: email,
-    subject: "Verify Your TurfX Account",
+    subject: "Verify Your PLAYZA Account",
     html: `
       <h2>Email Verification</h2>
 

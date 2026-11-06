@@ -102,6 +102,7 @@ const forgotPasswordValidation = [
  * ==============================
  */
 const verifyOtpValidation = [
+  body("purpose").optional().isIn(["EMAIL_VERIFICATION", "FORGOT_PASSWORD"]),
   body("email")
     .trim()
     .notEmpty()

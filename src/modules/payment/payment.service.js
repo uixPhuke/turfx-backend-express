@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const { signaturesMatch, requireBookingOwner, verifyOrderBinding } = require("../../utils/paymentIntegrity");
 const Razorpay = require("razorpay");
 const slotService = require("../slot/slot.service");
 
@@ -11,15 +12,15 @@ const ApiError = require("../../utils/ApiError");
 // Razorpay Instance
 // ==========================================
 
+let razorpay;
 const getRazorpay = () => {
-  return new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || "test_key",
-    key_secret:
-      process.env.RAZORPAY_KEY_SECRET || "test_secret",
-  });
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    throw new ApiError(503, "Payment provider is not configured");
+  }
+  if (!razorpay) razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET });
+  return razorpay;
 };
-
-const razorpay = getRazorpay();
 // ==========================================
 // Generate Receipt
 // Example:
@@ -71,7 +72,8 @@ const toPaise = (amount) => {
 
 const createPaymentOrder = async (
   bookingId,
-  paymentMethod = "razorpay"
+  paymentMethod = "razorpay",
+  actorId
 ) => {
 
   // ========================================
@@ -90,6 +92,8 @@ const createPaymentOrder = async (
       "Booking not found"
     );
   }
+
+  requireBookingOwner(booking, actorId);
 
   if (
     booking.bookingStatus !==
@@ -163,7 +167,7 @@ const createPaymentOrder = async (
   // ========================================
 
   const razorpayOrder =
-    await razorpay.orders.create(
+    await getRazorpay().orders.create(
       orderPayload
     );
 
@@ -276,152 +280,41 @@ const createPaymentOrder = async (
 // Verify Payment
 // ==========================================
 
-const verifyPayment = async (data) => {
-
-  const {
-    bookingId,
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature,
-  } = data;
-
-  // ========================================
-  // Booking
-  // ========================================
-
-  const booking = await Booking.findById(
-    bookingId
-  );
-
-  if (!booking) {
-    throw new ApiError(
-      404,
-      "Booking not found"
-    );
+const verifyPayment = async (data, actorId) => {
+  const { bookingId, razorpay_order_id: orderId, razorpay_payment_id: paymentId,
+    razorpay_signature: signature } = data;
+  const booking = await Booking.findById(bookingId);
+  if (!booking) throw new ApiError(404, "Booking not found");
+  requireBookingOwner(booking, actorId);
+  const payment = await Payment.findOne({ booking: booking._id, isDeleted: false });
+  if (!payment) throw new ApiError(404, "Payment not found");
+  verifyOrderBinding(booking, payment, orderId);
+  const expected = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .update(`${orderId}|${paymentId}`).digest("hex");
+  if (!signaturesMatch(expected, signature)) throw new ApiError(400, "Invalid payment signature");
+  if (payment.status === "paid" && booking.bookingStatus === "confirmed" &&
+      payment.razorpay.paymentId === paymentId) return { payment, booking };
+  if (booking.bookingStatus !== "pending" ||
+      (payment.expiresAt && payment.expiresAt <= new Date())) {
+    throw new ApiError(409, "Booking hold is no longer payable");
   }
-
-  // ========================================
-  // Payment
-  // ========================================
-
-  const payment = await Payment.findOne({
-    booking: booking._id,
-    isDeleted: false,
-  });
-
-  if (!payment) {
-    throw new ApiError(
-      404,
-      "Payment not found"
-    );
+  const captured = await getRazorpay().payments.fetch(paymentId);
+  if (captured.order_id !== orderId || captured.status !== "captured" ||
+      captured.amount !== toPaise(booking.pricing.totalAmount) || captured.currency !== "INR") {
+    throw new ApiError(409, "Gateway payment does not match the booking amount or capture status");
   }
-
-  if (
-    payment.status === "paid"
-  ) {
-    throw new ApiError(
-      400,
-      "Payment already verified"
-    );
-  }
-
-  // ========================================
-  // Verify Razorpay Signature
-  // ========================================
-
-  const body =
-    razorpay_order_id +
-    "|" +
-    razorpay_payment_id;
-
-  const expectedSignature =
-    crypto
-      .createHmac(
-        "sha256",
-        process.env.RAZORPAY_KEY_SECRET
-      )
-      .update(body)
-      .digest("hex");
-
-  if (
-    expectedSignature !==
-    razorpay_signature
-  ) {
-
-    payment.status = "failed";
-
-    payment.failure = {
-      reason: "Signature mismatch",
-      description:
-        "Invalid Razorpay signature",
-    };
-
-    await payment.save();
-
-    throw new ApiError(
-      400,
-      "Invalid payment signature"
-    );
-
-  }
-
-  // ========================================
-  // Update Payment
-  // ========================================
-
-  payment.razorpay.paymentId =
-    razorpay_payment_id;
-
-  payment.razorpay.signature =
-    razorpay_signature;
-
+  payment.razorpay.paymentId = paymentId;
+  payment.razorpay.signature = signature;
   payment.status = "paid";
-
   payment.paidAt = new Date();
-
   await payment.save();
-
-  // ========================================
-  // Update Booking
-  // ========================================
-
-  booking.payment.paymentId =
-    razorpay_payment_id;
-
-  booking.payment.signature =
-    razorpay_signature;
-
-  booking.payment.status =
-    "paid";
-
-  booking.payment.paidAt =
-    payment.paidAt;
-
-  booking.bookingStatus =
-    "confirmed";
-
+  booking.payment.paymentId = paymentId;
+  booking.payment.signature = signature;
+  booking.payment.status = "paid";
+  booking.payment.paidAt = payment.paidAt;
+  booking.bookingStatus = "confirmed";
   await booking.save();
-
-  // ========================================
-  // Confirm Slot
-  // ========================================
-
-  /*
-    If your booking flow reserves
-    slots AFTER payment,
-    reserve the slot here.
-
-    await slotService.bookSlot(...);
-  */
-
-  return {
-
-    payment,
-
-    booking,
-
-  };
-
+  return { payment, booking };
 };
 
 // ==========================================
@@ -433,7 +326,7 @@ const refundPayment = async (
   reason = "Customer requested refund"
 ) => {
 
-  const payment = await Payment.findById(paymentId);
+  let payment = await Payment.findById(paymentId);
 
   if (!payment) {
     throw new ApiError(
@@ -449,74 +342,29 @@ const refundPayment = async (
     );
   }
 
-  /*
-  ==========================================
-  Razorpay Refund
-  ==========================================
-
-  const refund = await razorpay.payments.refund(
-    payment.razorpay.paymentId,
-    {
-      amount: payment.amount.total * 100,
-      notes: {
-        reason,
-      },
-    }
-  );
-
-  */
-
-  payment.refund = {
-    refundId: null, // refund.id
-    amount: payment.amount.total,
-    reason,
-    status: "processed",
-    refundedAt: new Date(),
-  };
-
-  payment.status = "refunded";
-
-  await payment.save();
-
-  // ========================================
-  // Update Booking
-  // ========================================
-
-  const booking = await Booking.findById(
-    payment.booking
-  );
-
-  if (booking) {
-
-    booking.bookingStatus = "cancelled";
-
-    booking.payment.status =
-      "refunded";
-
-    booking.refund = {
-      amount: payment.amount.total,
-      status: "processed",
-      refundedAt: new Date(),
-    };
-
-    booking.cancellation = {
-      cancelledBy: "admin",
-      reason,
-      cancelledAt: new Date(),
-    };
-
-    await booking.save();
-
-    // Release Slot
-
-    if (booking.slot) {
-      await slotService.releaseSlot(
-        booking.slot
-      );
-    }
-
+  // Persist intent before contacting the provider. Never claim settlement from a local flag.
+  if (payment.refund.status === "pending") return payment;
+  payment = await Payment.findOneAndUpdate({ _id: paymentId, status: "paid",
+    "refund.status": { $nin: ["pending", "processed"] } },
+    { $set: { refund: { amount: payment.amount.total, reason, status: "pending" } } }, { new: true });
+  if (!payment) throw new ApiError(409, "Refund is already in progress");
+  let refund;
+  try {
+    refund = await getRazorpay().payments.refund(payment.razorpay.paymentId, {
+      amount: toPaise(payment.amount.total), notes: { reason },
+      receipt: `refund-${payment._id}`,
+    });
+  } catch (error) {
+    // Keep pending: an ambiguous network failure may have created a refund upstream.
+    throw new ApiError(502, "Refund confirmation is pending; reconcile with the payment provider");
   }
-
+  payment.refund.refundId = refund.id;
+  payment.refund.status = refund.status === "processed" ? "processed" : "pending";
+  if (payment.refund.status === "processed") {
+    payment.refund.refundedAt = new Date();
+    payment.status = "refunded";
+  }
+  await payment.save();
   return payment;
 
 };
@@ -568,7 +416,7 @@ const cancelPayment = async (
       "cancelled";
 
     booking.payment.status =
-      "cancelled";
+      "failed";
 
     await booking.save();
 
@@ -589,7 +437,8 @@ const cancelPayment = async (
 
 const handleWebhook = async (
   signature,
-  payload
+  payload,
+  rawBody
 ) => {
 
   // ========================================
@@ -601,16 +450,20 @@ const handleWebhook = async (
       "sha256",
       process.env.RAZORPAY_WEBHOOK_SECRET
     )
-    .update(JSON.stringify(payload))
+    .update(rawBody || Buffer.alloc(0))
     .digest("hex");
 
-  if (expectedSignature !== signature) {
+  if (!Buffer.isBuffer(rawBody) || !signaturesMatch(expectedSignature, signature)) {
     throw new ApiError(
       400,
       "Invalid webhook signature"
     );
   }
 
+  // Process exactly the signed document, not a body transformed by generic middleware.
+  try { payload = JSON.parse(rawBody.toString("utf8")); }
+  catch { throw new ApiError(400, "Invalid webhook JSON"); }
+  if (typeof payload.event !== "string" || !payload.payload) throw new ApiError(400, "Invalid webhook payload");
   const event = payload.event;
 
   switch (event) {
@@ -680,6 +533,11 @@ const handlePaymentCaptured = async (
     return;
   }
 
+  if (["refunded", "partially_refunded"].includes(payment.status)) return;
+  if (paymentEntity.amount !== toPaise(payment.amount.total) ||
+      paymentEntity.currency !== payment.amount.currency || paymentEntity.status !== "captured") {
+    throw new ApiError(400, "Captured payment amount or currency mismatch");
+  }
   payment.status = "paid";
 
   payment.razorpay.paymentId =
@@ -705,7 +563,7 @@ const handlePaymentCaptured = async (
       payment.booking
     );
 
-  if (booking) {
+  if (booking && ["pending", "confirmed"].includes(booking.bookingStatus)) {
 
     booking.payment.status =
       "paid";
@@ -743,6 +601,7 @@ const handlePaymentFailed = async (
     return;
   }
 
+  if (["paid", "captured", "refunded", "partially_refunded"].includes(payment.status)) return;
   payment.status = "failed";
 
   payment.failure = {
@@ -854,6 +713,16 @@ const handleRefundProcessed =
     };
 
     await payment.save();
+    const booking = await Booking.findById(payment.booking);
+    if (booking && refundEntity.amount === toPaise(payment.amount.total)) {
+      booking.payment.status = "refunded";
+      booking.refund = { refundId: payment.refund.refundId, amount: payment.refund.amount,
+        status: "processed", refundedAt: payment.refund.refundedAt };
+      booking.bookingStatus = "cancelled";
+      await booking.save();
+      if (booking.slot) await slotService.releaseSlot(booking.slot);
+    }
+
 
   };
 

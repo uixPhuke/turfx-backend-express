@@ -15,7 +15,8 @@ const createPaymentOrder = asyncHandler(
     const payment =
       await paymentService.createPaymentOrder(
         req.body.bookingId,
-        req.body.paymentMethod
+        req.body.paymentMethod,
+      req.user._id
       );
 
     return res.status(201).json(
@@ -38,7 +39,7 @@ const verifyPayment = asyncHandler(
 
     const result =
       await paymentService.verifyPayment(
-        req.body
+        req.body, req.user._id
       );
 
     return res.status(200).json(
@@ -446,7 +447,7 @@ const handleWebhook = asyncHandler(
     const result =
       await paymentService.handleWebhook(
         signature,
-        req.body
+        req.body, req.rawBody
       );
 
     return res.status(200).json(

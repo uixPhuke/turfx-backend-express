@@ -1,0 +1,49 @@
+name: PLAYZA Backend
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: playza
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: playza_test
+        ports: ["55439:5432"]
+        options: >-
+          --health-cmd "pg_isready -U playza -d playza_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://playza:fixture-only@127.0.0.1:55439/playza_test
+      PLAYZA_TEST_DATABASE_URL: postgresql://playza:fixture-only@127.0.0.1:55439/playza_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:validate
+      - run: npm run db:generate
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test -- --runInBand --silent
+      - run: npm run db:migrate:deploy
+      - run: npm run test:postgres
+      - run: node --test scripts/test-release-runtime.cjs
+      - name: Install isolated Redis test server
+        run: sudo apt-get update && sudo apt-get install -y redis-server
+      - run: node scripts/test-runtime-process.cjs
+      - name: Build production container
+        run: docker build -f Dockerfile.postgres --target runtime -t playza-api:ci .
+      - name: Validate recovery scripts
+        run: bash -n scripts/database-backup.sh scripts/database-restore.sh
+      - name: Verify migration history matches schema
+        run: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code

@@ -235,6 +235,11 @@ const updateReview = async (
   ) {
 
     for (const publicId of removeImages) {
+      if (!review.images.some((image) => image.public_id === publicId)) {
+        throw new ApiError(400, "Image does not belong to this review");
+      }
+    }
+    for (const publicId of removeImages) {
 
       await deleteFromCloudinary(
         publicId

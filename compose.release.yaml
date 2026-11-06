@@ -1,0 +1,58 @@
+# Validation/staging stack. Keep .env.release private and out of version control.
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: playza
+      POSTGRES_DB: playza
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a hexadecimal POSTGRES_PASSWORD in .env.release}
+    volumes: ["playza-postgres:/var/lib/postgresql"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U playza -d playza"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes: ["playza-redis:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  migrate:
+    build: { context: ., dockerfile: Dockerfile.postgres, target: migrate }
+    environment:
+      DATABASE_URL: postgresql://playza:${POSTGRES_PASSWORD}@postgres:5432/playza
+    depends_on: { postgres: { condition: service_healthy } }
+  api:
+    build: { context: ., dockerfile: Dockerfile.postgres, target: runtime }
+    env_file: ${PLAYZA_ENV_FILE:-.env.release}
+    environment:
+      APP_ENV: ${APP_ENV:?Set APP_ENV to staging or production}
+      NODE_ENV: production
+      POSTGRES_API_PORT: "8001"
+      DATABASE_URL: postgresql://playza:${POSTGRES_PASSWORD}@postgres:5432/playza
+      REDIS_URL: redis://redis:6379
+    ports: ["127.0.0.1:8001:8001"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+  worker:
+    build: { context: ., dockerfile: Dockerfile.postgres, target: runtime }
+    env_file: ${PLAYZA_ENV_FILE:-.env.release}
+    environment:
+      APP_ENV: ${APP_ENV:?Set APP_ENV to staging or production}
+      NODE_ENV: production
+      DATABASE_URL: postgresql://playza:${POSTGRES_PASSWORD}@postgres:5432/playza
+    command: ["node", ".playza-build/postgres/worker.js"]
+    healthcheck: { disable: true }
+    depends_on: { migrate: { condition: service_completed_successfully } }
+    restart: unless-stopped
+volumes:
+  playza-postgres:
+  playza-redis:

@@ -14,11 +14,11 @@ const adminAuth = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] });
 
     const admin = await Admin.findById(decoded.id);
 
-    if (!admin || !admin.isActive || admin.isDeleted) {
+    if (!admin || !admin.isActive || admin.isDeleted || decoded.type !== "access" || decoded.realm !== "admin" || decoded.version !== (admin.tokenVersion || 0)) {
       return res.status(401).json({
         success: false,
         message: "Admin not found.",

@@ -100,19 +100,13 @@ const createNotificationValidation = [
 
 const sendNotificationValidation = [
 
-  body("receivers")
-    .isArray({
-      min: 1,
-    })
+  body("receiver")
+    .isMongoId()
     .withMessage(
       "Receivers must be a non-empty array"
     ),
 
-  body("receivers.*")
-    .isMongoId()
-    .withMessage(
-      "Each receiver must be a valid Mongo ID"
-    ),
+
 
   body("title")
     .trim()

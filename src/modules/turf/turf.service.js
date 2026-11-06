@@ -237,6 +237,11 @@ const updateTurf = async (
     }
 
     for (const publicId of removeImages) {
+      if (!turf.images.some((image) => image.public_id === publicId)) {
+        throw new ApiError(400, "Image does not belong to this turf");
+      }
+    }
+    for (const publicId of removeImages) {
 
       await deleteFromCloudinary(
         publicId
@@ -654,9 +659,7 @@ const restoreTurf = async (
 ) => {
 
   const turf =
-    await Turf.findById(
-      turfId
-    );
+    await Turf.findById(turfId).setOptions({ includeDeleted: true });
 
   if (!turf) {
     throw new ApiError(

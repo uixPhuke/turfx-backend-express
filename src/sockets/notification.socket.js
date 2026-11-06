@@ -63,7 +63,7 @@ const registerNotificationSocket = (
         const notifications =
           await Notification.find({
 
-            user: userId,
+            receiver: userId,
 
             isDeleted: false,
 
@@ -112,7 +112,7 @@ const registerNotificationSocket = (
 
             _id: notificationId,
 
-            user: userId,
+            receiver: userId,
 
           },
 
@@ -165,7 +165,7 @@ const registerNotificationSocket = (
 
           {
 
-            user: userId,
+            receiver: userId,
 
             isRead: false,
 
@@ -216,7 +216,7 @@ const registerNotificationSocket = (
         const count =
           await Notification.countDocuments({
 
-            user: userId,
+            receiver: userId,
 
             isRead: false,
 

@@ -104,6 +104,11 @@ const creditWallet = asyncHandler(
 // Debit Wallet
 // ==========================================
 
+const withdraw = asyncHandler(async (req, res) => {
+  // Payouts require a provider-backed request lifecycle; no balance mutation until configured.
+  throw new (require("../../utils/ApiError"))(503, "Withdrawals are not available yet");
+});
+
 const debitWallet = asyncHandler(
   async (req, res) => {
 
@@ -486,6 +491,7 @@ const deleteWallet = asyncHandler(
 // ==========================================
 
 module.exports = {
+  withdraw,
 
   // Wallet
   getWallet,

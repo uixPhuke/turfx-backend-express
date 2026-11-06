@@ -344,9 +344,14 @@ const isSlotAvailable = async (
 
 const getSlotsByTurf = async (
   turfId,
-  query = {}
+  query = {},
+  actor
 ) => {
 
+  const turf = await Turf.findById(turfId);
+  if (!turf || (actor?.role !== "admin" && String(turf.owner) !== String(actor?._id))) {
+    throw new ApiError(403, "Unauthorized turf access");
+  }
   const {
     page = 1,
     limit = 20,
@@ -408,8 +413,14 @@ const getSlotsByTurf = async (
 
 const getSlotsByDate = async (
   turfId,
-  bookingDate
+  bookingDate,
+  actor
 ) => {
+
+  const turf = await Turf.findById(turfId);
+  if (!turf || (actor?.role !== "admin" && String(turf.owner) !== String(actor?._id))) {
+    throw new ApiError(403, "Unauthorized turf access");
+  }
 
   const slots = await Slot.find({
     turf: turfId,
@@ -536,25 +547,9 @@ const bookSlot = async (
 // Release Slot
 // ==========================================
 
-const releaseSlot = async (
-  slotId
-) => {
-
-  const slot = await Slot.findById(
-    slotId
-  );
-
-  if (!slot) {
-    throw new ApiError(
-      404,
-      "Slot not found"
-    );
-  }
-
-  await slot.deleteOne();
-
+const releaseSlot = async (slotId) => {
+  await Slot.deleteOne({ _id: slotId });
   return true;
-
 };
 
 // ==========================================

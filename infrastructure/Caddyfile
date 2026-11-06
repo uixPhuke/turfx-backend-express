@@ -1,0 +1,9 @@
+# Optional self-hosted edge. Render terminates TLS itself and does not need Caddy.
+{$API_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy api:8001
+  log {
+    output stdout
+    format json
+  }
+}

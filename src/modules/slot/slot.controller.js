@@ -80,7 +80,7 @@ const getSlotsByTurf = asyncHandler(async (req, res) => {
   const slots =
     await slotService.getSlotsByTurf(
       req.params.turfId,
-      req.query
+      req.query, req.user
     );
 
   return res.status(200).json(
@@ -102,7 +102,7 @@ const getSlotsByDate = asyncHandler(async (req, res) => {
   const slots =
     await slotService.getSlotsByDate(
       req.params.turfId,
-      req.query.date
+      req.query.date, req.user
     );
 
   return res.status(200).json(

@@ -1,9 +1,12 @@
-# TurfX Backend
+# PLAYZA Backend
 
-> Production-ready backend for **TurfX**, a football turf
-> booking platform.
+> PLAYZA backend under active development. The existing MongoDB API is retained while PostgreSQL/Prisma features are prepared and verified.
 
-## Features
+## Current development
+
+See [implementation decisions](docs/PLAYZA_IMPLEMENTATION.md) and [Prisma schema](prisma/schema.prisma). Run `npm run test:security`, `npm run db:validate`, `npm run typecheck`, and `npm run lint`. PostgreSQL integration tests require an isolated test instance via `PLAYZA_TEST_DATABASE_URL`. Run the separate PostgreSQL API with `npm run start:postgres`; its [API contract](docs/POSTGRES_API.md) documents implemented endpoints and limits. No production cutover has been performed.
+
+## Legacy feature inventory
 
 -   JWT Authentication (Access & Refresh Tokens)
 -   User, Owner & Admin roles
