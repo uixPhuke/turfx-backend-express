@@ -1,9 +1,9 @@
 name: PLAYZA Backend
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, "playza-staging-*"]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, "playza-staging-*"]
 permissions:
   contents: read
 jobs:
