@@ -52,3 +52,5 @@ See STAGING_VALIDATION.md for identifiers, evidence, limitations and next action
 ### Resume on 14 November
 
 Render still requires billing; no hosted staging workload is live. Corrected signing variants are tested and the actual staging Android keystore is verified. Backend Node 22 lockfile compatibility is repaired; fresh SQL migrations, 48 SQL tests and 3 runtime tests pass, and the current Compose image starts healthy. Mobile local checks/export pass; its latest hosted CI exposed a lockfile portability issue being repaired before release. See STAGING_VALIDATION.md for current evidence rather than relying on older green runs.
+
+The current dependency repair retains patched Mongoose 9.12.1, uses the documented MongoDB Jest-only runtime adapter, and pins mobile npm 11.21.2 across CI/EAS to reproduce clean installs. Current hosted runs must pass before the dependency repair is considered finished; do not rely on an older green snapshot.

@@ -25,3 +25,12 @@ jest.mock("../src/config/cloudinary", () => ({
     result: "ok",
   })),
 }));
+// MongoDB driver 7.6+ dynamic OS imports are unavailable in Jest's VM.
+// Official workaround: https://jira.mongodb.org/browse/NODE-7832
+// Keep the patched production driver; adapt only the isolated test environment.
+const mongoose = require("mongoose");
+const nativeConnect = mongoose.connect.bind(mongoose);
+mongoose.connect = (uri, options = {}) => nativeConnect(uri, {
+  ...options,
+  runtimeAdapters: { os: require("node:os"), ...options.runtimeAdapters },
+});
