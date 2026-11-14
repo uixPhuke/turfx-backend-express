@@ -1,6 +1,14 @@
-# PLAYZA deployment readiness — 6 November 2026
+# PLAYZA deployment readiness — 14 November 2026
 
 **Assessment: prepared for staging setup and further validation; not cleared for public production release.** No new product features were added. Phase 2 has published isolated staging source branches and created a Render Blueprint and actual EAS project. Render provisioning failed on billing; no hosted PLAYZA workload, production migration, live charge or store submission occurred.
+
+## Current check — 14 November 2026
+
+Hosted Render staging is still **not provisioned**: the confirmed workspace plan fails `need_payment_info`. EAS is authenticated, the real project is linked, and the `.staging` Android keystore is verified. No signed app build or physical-device QA is attested.
+
+Dependency portability fixes now prove backend clean installs on Node22/Linux and host npm, while mobile explicitly pins npm 11.21.2 for both CI and EAS. All four app variants are checked automatically. Current local results: 93 legacy tests, 48 PostgreSQL tests, 3 runtime tests, schema/type/lint, Doctor 18/18, all-platform exports and rebuilt Compose readiness pass. Patched Mongoose 9.12.1 remains in use; a test-only OS adapter handles the upstream MongoDB/Jest metadata bug. Production dependency audit is zero findings; lower-severity build-tool advisories remain documented. Both current code revisions now pass hosted CI: backend run 43599359528 and mobile run 43599194320.
+
+See STAGING_VALIDATION.md for the current run links and remaining external requirements. The original local-preparation details below are retained as historical evidence.
 
 ## Delivered
 
@@ -31,7 +39,7 @@
 | Cloudinary real upload | Pass, cleanup ok | Synthetic 1px image, configured transformations, HTTPS result |
 | Razorpay real test order | Pass | INR 100 minor units; order only, no payment or capture |
 | Render Blueprint schema | Pass | Local official JSON Schema validation; no infrastructure plan applied |
-| Docker build/Compose runtime | Not run locally | Docker executable unavailable; configured CI build has not run remotely |
+| Docker build/Compose runtime | Pass on 14 November | Rebuilt isolated Compose API/worker and healthy dependency startup; hosted production-container build passes |
 | Signed APK/AAB/IPA | Not produced | EAS/Apple/Google signing access unavailable |
 | Staging smoke/load/monitoring | Not run | Staging URL/resources and alert destination not provisioned |
 

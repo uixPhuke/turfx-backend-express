@@ -1,0 +1,81 @@
+{
+  "date": "2026-11-14",
+  "scope": "Local/container and hosted CI validation; hosted Render staging not provisioned",
+  "backendRevision": "6d83564",
+  "mobileRevision": "e5a1a07",
+  "local": {
+    "legacyTests": {
+      "passed": 93,
+      "suites": 14
+    },
+    "postgresTests": {
+      "passed": 48
+    },
+    "runtimeTests": {
+      "passed": 3
+    },
+    "backendValidation": "passed",
+    "mobileValidation": "passed",
+    "expoDoctor": {
+      "passed": 18,
+      "total": 18
+    },
+    "mobileExports": [
+      "android",
+      "ios",
+      "web"
+    ],
+    "composeReadiness": 200,
+    "backendNode22CleanInstall": "passed",
+    "mobileNode22PinnedNpmCleanInstall": "passed"
+  },
+  "security": {
+    "backendProduction": {
+      "critical": 0,
+      "high": 0,
+      "moderate": 0,
+      "low": 0
+    },
+    "mobile": {
+      "critical": 0,
+      "high": 0,
+      "moderate": 0,
+      "low": 14
+    },
+    "remainingRootAdvisory": "deepmerge 4.3.1; see security report"
+  },
+  "hosted": {
+    "backendCI": {
+      "runId": 43599359528,
+      "status": "success",
+      "url": "https://github.com/uixPhuke/turfx-backend-express/actions/runs/43599359528"
+    },
+    "mobileCI": {
+      "runId": 43599194320,
+      "status": "success",
+      "url": "https://github.com/uixPhuke/playza-mobile/actions/runs/43599194320"
+    },
+    "render": {
+      "blueprintId": "exs-dbmqjeom7kps73c3e85g",
+      "planningOutcome": "failed",
+      "reason": "need_payment_info",
+      "resourcesProvisioned": 0
+    }
+  },
+  "mobile": {
+    "projectId": "c57f8d7c-d393-4ca9-9af2-463e77d33cd6",
+    "androidStagingPackage": "com.uixphuke.playza.staging",
+    "stagingKeystoreVerified": true,
+    "signedBuildProduced": false,
+    "physicalDeviceQAPerformed": false
+  },
+  "externalGates": [
+    "Render billing and reviewed valid infrastructure plan",
+    "actual staging API endpoint and secrets",
+    "provider capture/refund/webhook delivery",
+    "Apple signing/provisioning",
+    "FCM/APNs and restricted Maps credentials",
+    "physical-device QA",
+    "hosted monitoring/backup/recovery/load validation"
+  ]
+}

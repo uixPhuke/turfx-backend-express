@@ -1,56 +1,39 @@
-# PLAYZA delivery status — 6 November 2026
+# PLAYZA delivery plan — 14 November 2026
 
-Implementation is authorized without routine phase approval. This status distinguishes implemented behavior from production release verification.
+Current release assessment: **code and container validation pass; hosted staging is blocked on Render billing. Production is not cleared.** No new product features were added during release validation.
 
-| Phase | Verified implementation | Release work still required |
+## Product phases
+
+| Phase | Implementation state | Outstanding release work |
 |---|---|---|
-| 1 — Audit | Existing backend audited; report in parent workspace | None for initial audit |
-| 2 — Architecture/database | Separate PostgreSQL/Prisma modular backend; six forward migrations | Rehearse MongoDB extraction, reconciliation and cutover with actual source data |
-| 3 — Foundation | Validation, centralized errors, revocable sessions, Redis rate limits, worker and CI | Verify deployed dependencies, backups and operational alerts |
-| 4 — Core backend | Authentication, profiles, sports, approved discovery, owner approval, venue/facility/resource management, scoped staff and media | Production data and end-to-end operational QA |
-| 5 — Booking/payments | Exclusive/capacity consistency, canonical pricing, coupons, configurable fees/tax, cancellation policy, Razorpay signatures, capture/refund reconciliation, signed entry tickets | Actual provider sandbox checkout/webhooks/refunds and production credentials |
-| 6 — Mobile | Reference-derived design, separate slot calendar, checkout, tickets, reviews, account and notifications; Android/iOS/web bundles compile | Physical-device QA, accessibility review, EAS project/signing and distribution |
-| 7 — Community | Teams/roles, games/invitations, persistent realtime chat, pagination, blocking/reports, push delivery worker | Real FCM/APNs delivery and multi-device lifecycle QA; richer read/typing presentation remains |
-| 8 — Business/deployment | Owner/admin operations, analytics, staff, check-in scanner, moderation, API docs, Render Blueprint, container/Compose configuration and release preflights | Source publication, authenticated infrastructure deployment, secrets, backup/restore/load rehearsal and live smoke checks |
+| 1 — Backend audit | Completed | Retain findings and trace changes |
+| 2 — Architecture/database | PostgreSQL/Prisma schema and six migrations implemented | Actual reconciled MongoDB data import/cutover |
+| 3 — Foundation | Implemented and locally/CI verified | Hosted operational configuration |
+| 4 — Core backend | Implemented | End-to-end hosted QA |
+| 5 — Booking/payments | Local consistency, signatures, idempotency/refund tests pass | Actual capture/refund/webhook delivery |
+| 6 — Mobile | Connected app and all-platform bundles verified | Signed builds, push/maps credentials and physical-device QA |
+| 7 — Community | Local chat/membership/persistence tests pass | Hosted multi-instance reconnect and device lifecycle QA |
+| 8 — Business/deployment | Owner/admin tools and deployment configuration prepared | Hosted staging, monitoring, managed backups/load validation and production rollout |
 
-## Verification completed on this revision
+## Release Phase 2 — staging deployment and validation
 
-- 48 PostgreSQL integration tests pass against the isolated loopback PostgreSQL 18 cluster; zero failures/skips.
-- 93 legacy tests across 14 suites pass with synthetic MongoDB data.
-- Backend Prisma validation, TypeScript and ESLint pass.
-- Mobile TypeScript and ESLint pass with zero errors and zero warnings.
-- Android, iOS and web exports succeed, including 42 static routes. Output: `/private/tmp/playza-final-bundles-20261106`. These are compilation artifacts, not signed release builds.
-- Expo Doctor previously passed all 18 checks after SDK 54 dependency alignment.
-- Independent Redis stores were verified to share an atomic rate-limit counter.
+Completed during validation:
 
-## Launch blockers
+- Isolated backend staging branch published; legacy main/service remain separate. Private mobile repository published.
+- Current hosted CI passes: backend **6d83564**, run **43599359528**; mobile **e5a1a07**, run **43599194320**.
+- Backend clean installs reproduced on Node22/Linux and host npm. Patched Mongoose 9.12.1 retained; the documented MongoDB/Jest OS adapter is test-only. Disposable MongoDB preparation runs before Jest hook deadlines.
+- Mobile Node22/npm11.21.2 installation reproduced, and the same npm version is configured in CI/EAS. All four app variants are asserted; staging identifiers cannot silently resolve to production.
+- 93 legacy tests / 14 suites, 48 PostgreSQL tests and 3 runtime tests pass. Schema/type/lint, Expo Doctor 18/18 and Android/iOS/web exports pass.
+- Actual Docker production/migration images build; rebuilt isolated Compose API/PG/Redis are healthy and worker runs. Prior isolated Redis outage/recovery and backup/restore rehearsals pass. Managed hosted recovery remains unverified.
+- Backend production audit: zero advisories. Remaining low tooling findings are documented; no high/moderate/critical findings are accepted as cleared without scans.
+- Actual EAS project linked; correct staging Android keystore/package/fingerprint verified. No private signing material exported.
+- Read-only configured-source MongoDB inventory and explicit cutover/reconciliation plan prepared. No import, deletion or cutover performed.
 
-The Razorpay webhook secret is absent. Render CLI and EAS are not authenticated. Production API/origins, EAS project/signing, restricted map credentials and FCM/APNs configuration remain external setup requirements. Cloudinary, SMTP and Razorpay test credentials passed read-only authentication checks; a synthetic Cloudinary upload/transform/delete and a real Razorpay test order pass; no actual charge, refund, email or push delivery is attested.
+Still blocked or unverified:
 
-The chosen cancellation policy is a full refund until 24 hours before play and no refund afterward. The server records the policy snapshot and determines eligibility.
+1. Render planning returns `need_payment_info` for API, worker, PostgreSQL and Redis in My Workspace. No hosted PLAYZA services have been provisioned. Owner must configure a valid payment method; then the actual resource plan needs review before approval.
+2. No actual staging API URL is available for usable signed mobile builds. Apple signing/profiles, FCM/APNs and restricted Maps credentials remain unavailable.
+3. Razorpay sandbox checkout was attempted but provider verification returned one failed and one created attempt, zero captured. Synthetic booking was cancelled. Actual capture/refund/webhook success is not claimed.
+4. Physical-device QA, managed monitoring/alert delivery, production-sized load/recovery and real legacy-data reconciliation remain release gates.
 
-Local preparation initially made no commits/pushes. Phase 2 has now published isolated backend/mobile staging branches; no hosted PLAYZA deployment, production migration or signed native release has occurred. The existing MongoDB service and data remain separate. Phases 4–8 have substantial implemented functionality but are not certified production-complete.
-
-## Deployment preparation update
-
-Runtime hardening, environment separation, Docker/Compose/Render configuration, mobile development/preview/production profiles, CI extensions and the deployment/security/recovery documentation are prepared. Redis startup ordering and shutdown during cache outage were fixed using actual process tests. Three additional runtime regressions pass. All six migrations applied to a fresh isolated PostgreSQL database, schema diff was clean, and backup/restore into a new isolated database retained six migration records. Expo Doctor passes 18/18.
-
-Read DEPLOYMENT_READINESS.md for release gates: Docker image execution, hosted CI/deployment, signed native builds, real checkout/webhook/refund/push, load testing and dependency-advisory disposition remain unverified. Preparation is not a production launch approval.
-
-## Phase 2 — staging deployment and release validation
-
-- Render MCP authenticated and staging Blueprint created in My Workspace; actual plan failed with `need_payment_info`. Dashboard confirms no card. Secure billing form handed to owner; no infrastructure provisioned.
-- Docker Desktop discovered/started. Runtime/migration images build; isolated Compose API/PG18/Redis healthy and worker running; six migrations, Redis outage/recovery and in-container backup/restore pass.
-- Backend production audit: zero advisories. Full backend five low; mobile fourteen low, all traced to currently unpatched deepmerge tooling chains. High and moderate findings resolved through tested scoped overrides and Metro compatibility adaptation.
-- Actual EAS project @uixphuke/playza linked; staging Android keystore generated. Apple Developer access, staging API URL, maps/push credentials and physical-device QA remain. No signed APK/AAB/IPA produced.
-- Backend hosted CI passed; private mobile repository published and hosted verification passed. New final changes will receive another backend CI run.
-- Real Razorpay sandbox checkout reached provider authorization; one attempt failed/cancelled and one remained created, zero captured. Capture/refund/actual webhook delivery are not verified. Synthetic booking cancelled normally.
-- Read-only configured-source MongoDB inventory succeeded; detailed mapping/reconciliation/write-freeze/rollback plan and inventory script prepared. No ETL/import/deletion performed.
-
-See STAGING_VALIDATION.md for identifiers, evidence, limitations and next actions. Public production release remains blocked on validated hosted staging and external service/device gates.
-
-### Resume on 14 November
-
-Render still requires billing; no hosted staging workload is live. Corrected signing variants are tested and the actual staging Android keystore is verified. Backend Node 22 lockfile compatibility is repaired; fresh SQL migrations, 48 SQL tests and 3 runtime tests pass, and the current Compose image starts healthy. Mobile local checks/export pass; its latest hosted CI exposed a lockfile portability issue being repaired before release. See STAGING_VALIDATION.md for current evidence rather than relying on older green runs.
-
-The current dependency repair retains patched Mongoose 9.12.1, uses the documented MongoDB Jest-only runtime adapter, and pins mobile npm 11.21.2 across CI/EAS to reproduce clean installs. Current hosted runs must pass before the dependency repair is considered finished; do not rely on an older green snapshot.
+See STAGING_VALIDATION.md and docs/evidence/staging-2026-11-14.json for evidence and resource/run identifiers. No production deployment, live charge, store submission or legacy cutover has occurred.
