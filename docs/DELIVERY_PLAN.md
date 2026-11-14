@@ -43,8 +43,12 @@ Read DEPLOYMENT_READINESS.md for release gates: Docker image execution, hosted C
 - Docker Desktop discovered/started. Runtime/migration images build; isolated Compose API/PG18/Redis healthy and worker running; six migrations, Redis outage/recovery and in-container backup/restore pass.
 - Backend production audit: zero advisories. Full backend five low; mobile fourteen low, all traced to currently unpatched deepmerge tooling chains. High and moderate findings resolved through tested scoped overrides and Metro compatibility adaptation.
 - Actual EAS project @uixphuke/playza linked; staging Android keystore generated. Apple Developer access, staging API URL, maps/push credentials and physical-device QA remain. No signed APK/AAB/IPA produced.
-- Backend hosted CI passed; private mobile repository published and hosted verification underway. New final changes will receive another backend CI run.
+- Backend hosted CI passed; private mobile repository published and hosted verification passed. New final changes will receive another backend CI run.
 - Real Razorpay sandbox checkout reached provider authorization; one attempt failed/cancelled and one remained created, zero captured. Capture/refund/actual webhook delivery are not verified. Synthetic booking cancelled normally.
 - Read-only configured-source MongoDB inventory succeeded; detailed mapping/reconciliation/write-freeze/rollback plan and inventory script prepared. No ETL/import/deletion performed.
 
 See STAGING_VALIDATION.md for identifiers, evidence, limitations and next actions. Public production release remains blocked on validated hosted staging and external service/device gates.
+
+### Resume on 14 November
+
+Render still requires billing; no hosted staging workload is live. Corrected signing variants are tested and the actual staging Android keystore is verified. Backend Node 22 lockfile compatibility is repaired; fresh SQL migrations, 48 SQL tests and 3 runtime tests pass, and the current Compose image starts healthy. Mobile local checks/export pass; its latest hosted CI exposed a lockfile portability issue being repaired before release. See STAGING_VALIDATION.md for current evidence rather than relying on older green runs.
