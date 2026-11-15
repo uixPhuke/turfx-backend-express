@@ -1,6 +1,6 @@
 # PLAYZA delivery plan — 14 November 2026
 
-Current release assessment: **code and container validation pass; hosted staging is blocked on Render billing. Production is not cleared.** No new product features were added during release validation.
+Current release assessment: **local Docker is operational; free hosted staging is being prepared. Paid hosting is deferred by owner choice. Production is not cleared.** No new product features were added during release validation.
 
 ## Product phases
 
@@ -31,8 +31,8 @@ Completed during validation:
 
 Still blocked or unverified:
 
-1. Render planning returns `need_payment_info` for API, worker, PostgreSQL and Redis in My Workspace. No hosted PLAYZA services have been provisioned. Owner must configure a valid payment method; then the actual resource plan needs review before approval.
-2. No actual staging API URL is available for usable signed mobile builds. Apple signing/profiles, FCM/APNs and restricted Maps credentials remain unavailable.
+1. Paid Render provisioning is deferred. A free API/Postgres/Redis plan validated but has not been applied. Owner authorized Supabase Free: PLAYZA Staging kebshsbehrajlrooykxn is ACTIVE_HEALTHY, management SQL and backend-only public-schema grants verified; Prisma migrations await the database password/session-pooler secret. No payment card is required for local development.
+2. Mobile points to the verified Docker LAN API through explicit local EAS profiles. First Android development/preview native builds failed on unused MMKV requiring Nitro; dependency removal and rebuild validation are in progress. Apple signing/profiles, FCM/APNs and restricted Maps credentials remain unavailable.
 3. Razorpay sandbox checkout was attempted but provider verification returned one failed and one created attempt, zero captured. Synthetic booking was cancelled. Actual capture/refund/webhook success is not claimed.
 4. Physical-device QA, managed monitoring/alert delivery, production-sized load/recovery and real legacy-data reconciliation remain release gates.
 
@@ -41,3 +41,5 @@ See STAGING_VALIDATION.md and docs/evidence/staging-2026-11-14.json for evidence
 ## Free/local-first direction — 15 November 2026
 
 Owner declined Render billing. Paid provisioning is deferred, not a development blocker. Complete Docker stack and explicit LAN-capable mobile/EAS local profiles are being validated. Free Render supports a limited temporary API/datastore demonstration but lacks a worker, blocks SMTP and expires PostgreSQL. See FREE_LOCAL_TESTING.md; production configuration remains intact. No paid infrastructure is authorized for this stage.
+
+Supabase follow-up: dedicated Free PostgreSQL project provisioned at quoted $0/month. No API deployment or Prisma migration is claimed. btree_gist 1.7 in extensions, a temporary GiST constraint, and denial of public-schema access to Supabase API roles verified. See SUPABASE_FREE_STAGING.md. First EAS native builds exposed an unused MMKV/Nitro linkage error; MMKV was removed, mobile verify and Expo dependency checks pass, corrected preview/development builds submitted. Razorpay direct authorization API returned HTTP400 BAD_REQUEST_ERROR (requested URL unavailable), although test-order creation succeeds.

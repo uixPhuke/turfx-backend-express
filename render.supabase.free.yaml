@@ -1,0 +1,63 @@
+services:
+  - type: web
+    name: playza-staging-api
+    runtime: node
+    region: oregon
+    plan: free
+    autoDeployTrigger: off
+    buildCommand: npm ci --include=dev && npm run db:generate && npm run build:foundation
+    startCommand: npm run db:migrate:deploy && node .playza-build/postgres/server.js
+    healthCheckPath: /api/v2/ready
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: APP_ENV
+        value: staging
+      - key: NODE_ENV
+        value: production
+      - key: POSTGRES_API_PORT
+        value: "10000"
+      - key: TRUST_PROXY_HOPS
+        value: "1"
+      # Supabase IPv4 session-pooler URL; never expose this to mobile.
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          name: playza-staging-redis
+          type: keyvalue
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REFRESH_TOKEN_SECRET
+        generateValue: true
+      - key: OTP_SECRET
+        generateValue: true
+      - key: BOOKING_TAX_BPS
+        value: "0"
+      - key: BOOKING_FEE_MINOR
+        value: "0"
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+  - type: keyvalue
+    name: playza-staging-redis
+    region: oregon
+    plan: free
+    ipAllowList: []
+    maxmemoryPolicy: noeviction

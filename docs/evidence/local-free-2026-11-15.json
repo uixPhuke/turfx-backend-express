@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-15",
+  "scope": "free/local-first release validation",
+  "docker": {
+    "project": "playza-staging-validation",
+    "api": "healthy",
+    "postgres": "healthy",
+    "redis": "healthy",
+    "worker": "running",
+    "lanReadiness200": true,
+    "lanApi": "http://10.6.85.212:18121/api/v2"
+  },
+  "supabase": {
+    "project": "kebshsbehrajlrooykxn",
+    "organization": "asuqittjdqskcdefdoqb",
+    "region": "ap-south-1",
+    "quotedMonthlyCost": 0,
+    "status": "ACTIVE_HEALTHY",
+    "managementSqlVerified": true,
+    "publicApiRoleSchemaAccess": false,
+    "btreeGist": "1.7 in extensions",
+    "temporaryExclusionConstraintProbe": "passed",
+    "securityAdvisors": 0,
+    "prismaMigrationsApplied": false,
+    "reason": "Database password/session-pooler connection secret not available through connected management tools"
+  },
+  "razorpay": {
+    "mode": "test",
+    "orderCreation": "passed",
+    "directAuthorizationEndpoint": {
+      "httpStatus": 400,
+      "code": "BAD_REQUEST_ERROR",
+      "description": "The requested URL was not found on the server."
+    },
+    "capture": "not verified",
+    "refund": "not verified",
+    "providerWebhookDelivery": "not verified"
+  },
+  "android": {
+    "initialPreview": "0a93a15f-229b-4946-8f62-85db5244d985",
+    "initialDevelopment": "a155b5a5-5ffc-4ac1-bb4a-e20be05dc8c2",
+    "initialResult": "ERRORED: unused MMKV required uninstalled Nitro module",
+    "fix": "Removed unused react-native-mmkv, no application imports",
+    "previewRetry": "a42f7f30-573b-4455-8380-5e980fcc607e",
+    "developmentRetry": "cc6b9562-84eb-40ed-b4d5-7558ba43ce21",
+    "retryResult": "IN_PROGRESS",
+    "deviceQa": "not performed"
+  },
+  "render": {
+    "previousFreePlan": "PLANNED, not applied",
+    "supabaseAlternative": "render.supabase.free.yaml prepared locally; not remotely planned or applied"
+  },
+  "production": "not deployed or cleared"
+}
