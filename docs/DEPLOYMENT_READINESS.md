@@ -1,4 +1,15 @@
-# PLAYZA deployment readiness — 14 November 2026
+# PLAYZA deployment readiness — updated 15 November 2026
+
+## Current free/local-first status — 15 November 2026
+
+- Paid Render hosting is deferred by owner choice. Development is not blocked by billing.
+- Complete Docker PostgreSQL/Redis/API/worker stack runs; API/PG/Redis are healthy. LAN API readiness returned HTTP200 at http://10.6.85.212:18121/api/v2/ready. Metro/web serves HTTP200 at http://localhost:8081. These are local checks, not physical-device QA.
+- Supabase Free project PLAYZA Staging (`kebshsbehrajlrooykxn`, ap-south-1) was provisioned under the explicitly selected organization at quoted $0/month. Management SQL, restricted API-role schema grants, btree_gist 1.7 in extensions, and a temporary UUID/time-range exclusion constraint were verified. Security advisor returned zero lints after remediation. No PLAYZA tables/data were migrated; Prisma pooler/TLS connectivity requires the database password in a private staging secret store.
+- Initial signed Android preview/development builds failed on unused MMKV requiring an absent Nitro native module. MMKV was removed; mobile type/lint/profile checks, Expo dependency check and Doctor18/18 pass. Corrected EAS builds are in progress; no APK/device pass is claimed yet.
+- Razorpay test-order creation passed; direct payment authorization endpoint returned400 BAD_REQUEST_ERROR. Capture/refund/real webhook delivery remain unverified.
+- Free Render+Supabase alternative is prepared in render.supabase.free.yaml, not applied. Free API sleep/SMTP restrictions and absence of a hosted worker remain. Production configuration is retained and production release is not cleared.
+
+See FREE_LOCAL_TESTING.md, SUPABASE_FREE_STAGING.md and evidence/local-free-2026-11-15.json. The 14 November record below is historical and is superseded by this section where status differs.
 
 **Assessment: prepared for staging setup and further validation; not cleared for public production release.** No new product features were added. Phase 2 has published isolated staging source branches and created a Render Blueprint and actual EAS project. Render provisioning failed on billing; no hosted PLAYZA workload, production migration, live charge or store submission occurred.
 

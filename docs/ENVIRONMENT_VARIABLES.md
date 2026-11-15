@@ -41,3 +41,7 @@ Never store secrets in Git, mobile public variables, images, logs or CI artifact
 | EAS_BUILD_PROFILE | EAS injected | chooses production or staging app identifiers; do not manually put in app secrets | preview |
 
 Legacy-only variables remain in `.env.example`: PORT, MONGODB_URI, DB_NAME, JWT_EXPIRE, REFRESH_TOKEN_EXPIRE, CLIENT_URL and API_URL. They do not configure v2. Preserved legacy mobile API_BASE_URL is unused by active PLAYZA screens. Firebase Admin credentials in the old MongoDB service do not configure v2 Expo push: Android FCM v1 service-account credentials and iOS APNs credentials are uploaded to EAS, never embedded as private keys in the app.
+
+## Optional Supabase Free staging database
+
+DATABASE_URL remains a backend/worker/migration secret; use the project's actual IPv4 session-pooler URL with TLS and a small connection_limit (for example3 per process). No Supabase client SDK key is required because PLAYZA retains Express/Prisma/JWT. Never put this URL/password in EXPO_PUBLIC_* or mobile builds. No new required variable is introduced. See SUPABASE_FREE_STAGING.md for placeholder format, grant hardening and pending credential verification.
