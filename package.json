@@ -21,7 +21,10 @@
     "start:worker": "node .playza-build/postgres/worker.js",
     "release:preflight": "node scripts/release-preflight.cjs",
     "verify": "npm run db:validate && npm run typecheck && npm run lint",
-    "docs:api": "node scripts/generate-openapi.cjs"
+    "docs:api": "node scripts/generate-openapi.cjs",
+    "local:up": "node scripts/local-stack.cjs",
+    "local:status": "node scripts/local-stack.cjs ps",
+    "local:stop": "node scripts/local-stack.cjs stop"
   },
   "keywords": [],
   "author": "",
