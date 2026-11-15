@@ -23,3 +23,5 @@ The paid Blueprint is not being applied. A free plan must contain only `free` re
 ## Integration limits
 
 Razorpay test order creation was verified; prior real checkout authorization stalled, and zero captures/refunds were confirmed. Real webhook delivery requires an externally reachable HTTPS endpoint or an explicitly enabled temporary tunnel. Local signed-event tests are not provider delivery evidence. Cloudinary upload/delete was verified previously. FCM/APNs credentials, Maps key restrictions, signed app runtime tests and physical-device QA remain separate. Core local development proceeds regardless of those gates.
+
+Actual Render free-plan validation rejected preDeployCommand (unsupported on free web). The free-only Blueprint instead runs forward migrations once at startup before accepting traffic; this is for a single-instance expiring demo only. Production retains its separate pre-deploy migration job.
