@@ -118,8 +118,41 @@
   "iosSimulator": {
     "buildId": "ec6a99fa-49ca-4975-948c-41dc106bca66",
     "profile": "simulator-local",
-    "status": "submitted",
+    "status": "FINISHED",
     "appleDistributionSigning": false,
-    "runtimeQa": "not performed; Xcode absent"
+    "runtimeQa": "not performed; Xcode absent",
+    "sourceStagingCommit": "ef28cef",
+    "archiveNote": "Working-directory archive; profile subsequently published on staging branch",
+    "artifactCheck": {
+      "httpStatus": 200,
+      "bytes": 26802680,
+      "verifiedDate": "2026-11-17"
+    }
+  },
+  "audit20261117": {
+    "registry": "https://registry.npmjs.org/",
+    "backendProduction": 0,
+    "backendFull": 0,
+    "mobile": 0,
+    "scope": "npm known-advisory snapshot, not application security certification",
+    "backendLockSha256": "7ceb34b61745c5bacfbe4aa98b7c6aeb99fd3727beb6986f0b16f9d18fd98f56",
+    "mobileLockSha256": "ca2f36d42326e230bcecb846132a31785d24b6181c6db214d65df89b37525d12"
+  },
+  "secretScan20261117": {
+    "tool": "Gitleaks 8.30.1",
+    "scope": "all available refs in non-shallow isolated staging checkouts; not ignored local secret environments",
+    "backend": {
+      "commitsScanned": 94,
+      "rawFindings": 1,
+      "confirmedCredentials": 0,
+      "disposition": "generic-api-key false positive: notification/expiry worker in historical deployment prose",
+      "fingerprint": "645eab83a2ea92c8a20e1aec0ecc09efbe8d6006:docs/DEPLOYMENT.md:generic-api-key:3"
+    },
+    "mobile": {
+      "commitsScanned": 16,
+      "rawFindings": 0
+    },
+    "reports": "redacted, private local directory; no broad exclusions added",
+    "limitation": "known pattern scan, not proof that secrets never existed in other refs/services"
   }
 }

@@ -7,7 +7,7 @@
 - [ ] Fresh database migrations, schema diff and backup/restore rehearsal pass.
 - [ ] Container builds in CI; non-root runtime starts, readiness detects DB/Redis failure and SIGTERM drains.
 - [ ] Mobile TypeScript/lint, SDK dependency validation, Expo Doctor and all-platform bundles pass.
-- [ ] npm advisories reviewed; incompatible upgrades are explicit release risks, not hidden by audit exclusions.
+- [x] npm known-advisory review refreshed17 November: backend production/full and mobile report zero; raw snapshots retained. Application security and historical-secret scans remain separate.
 
 ## Staging gates
 

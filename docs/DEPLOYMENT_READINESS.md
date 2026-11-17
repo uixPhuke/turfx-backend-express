@@ -86,3 +86,9 @@ PostgreSQL17 compatibility rehearsal (15 November): all six existing Prisma migr
 The existing PostgreSQL integration suite also passed on a second disposable PG17 container: 48 passed, zero failures/skips; providers mocked. Container removed. This adds PG17 evidence without replacing the separate requirements for real checkout/webhook/device QA.
 
 17 November runtime recheck: Docker Desktop restarted, cached API/worker/migration images built successfully, migrations job exited successfully, API/PG/Redis healthy and worker running. Local /live, /ready, /sports and LAN readiness all200; localhost8081 web200; untrusted browser Origin receives no CORS access. Existing data preserved.
+
+Current npm registry snapshot 17 November: backend production, backend full and mobile all zero advisories; raw reports and lockfile fingerprints retained under evidence. This supersedes older count snapshots, not the separate application-security gates.
+
+17 November iOS native result: simulator-local build ec6a99fa-49ca-4975-948c-41dc106bca66 FINISHED successfully. Build page: https://expo.dev/accounts/uixphuke/projects/playza/builds/ec6a99fa-49ca-4975-948c-41dc106bca66 . This is a simulator archive, not a signed physical-device IPA or App Store submission. Xcode/Simulator is absent locally; runtime QA remains unperformed. With Xcode installed, use `npx eas-cli build:run --platform ios --latest` to install the simulator build.
+
+The consolidated current release record is RELEASE_VALIDATION_2026-11-17.md, including completed native builds, fresh audit snapshots and remaining external requirements.
