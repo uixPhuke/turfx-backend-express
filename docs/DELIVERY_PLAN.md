@@ -1,4 +1,4 @@
-# PLAYZA delivery plan — 14 November 2026
+# PLAYZA delivery plan — updated 17 November 2026
 
 Current release assessment: **local Docker is operational; free hosted staging is being prepared. Paid hosting is deferred by owner choice. Production is not cleared.** No new product features were added during release validation.
 
@@ -32,7 +32,7 @@ Completed during validation:
 Still blocked or unverified:
 
 1. Paid Render provisioning is deferred. A free API/Postgres/Redis plan validated but has not been applied. Owner authorized Supabase Free: PLAYZA Staging kebshsbehrajlrooykxn is ACTIVE_HEALTHY, management SQL and backend-only public-schema grants verified; Prisma migrations await the database password/session-pooler secret. No payment card is required for local development.
-2. Mobile points to the verified Docker LAN API through explicit local EAS profiles. First Android development/preview native builds failed on unused MMKV requiring Nitro; dependency removal and rebuild validation are in progress. Apple signing/profiles, FCM/APNs and restricted Maps credentials remain unavailable.
+2. Mobile points to the verified Docker LAN API through explicit local EAS profiles. First Android development/preview native builds failed on unused MMKV requiring Nitro; unused MMKV removed and both corrected signed Android builds FINISHED; both artifact endpoints verified HTTP200 on 17 November. Apple signing/profiles, FCM/APNs and restricted Maps credentials remain unavailable.
 3. Razorpay sandbox checkout was attempted but provider verification returned one failed and one created attempt, zero captured. Synthetic booking was cancelled. Actual capture/refund/webhook success is not claimed.
 4. Physical-device QA, managed monitoring/alert delivery, production-sized load/recovery and real legacy-data reconciliation remain release gates.
 
@@ -42,4 +42,10 @@ See STAGING_VALIDATION.md and docs/evidence/staging-2026-11-14.json for evidence
 
 Owner declined Render billing. Paid provisioning is deferred, not a development blocker. Complete Docker stack and explicit LAN-capable mobile/EAS local profiles are being validated. Free Render supports a limited temporary API/datastore demonstration but lacks a worker, blocks SMTP and expires PostgreSQL. See FREE_LOCAL_TESTING.md; production configuration remains intact. No paid infrastructure is authorized for this stage.
 
-Supabase follow-up: dedicated Free PostgreSQL project provisioned at quoted $0/month. No API deployment or Prisma migration is claimed. btree_gist 1.7 in extensions, a temporary GiST constraint, and denial of public-schema access to Supabase API roles verified. See SUPABASE_FREE_STAGING.md. First EAS native builds exposed an unused MMKV/Nitro linkage error; MMKV was removed, mobile verify and Expo dependency checks pass, corrected preview/development builds submitted. Razorpay direct authorization API returned HTTP400 BAD_REQUEST_ERROR (requested URL unavailable), although test-order creation succeeds.
+Supabase follow-up: dedicated Free PostgreSQL project provisioned at quoted $0/month. No API deployment or Prisma migration is claimed. btree_gist 1.7 in extensions, a temporary GiST constraint, and denial of public-schema access to Supabase API roles verified. See SUPABASE_FREE_STAGING.md. First EAS native builds exposed an unused MMKV/Nitro linkage error; MMKV was removed, mobile verify and Expo dependency checks pass, corrected preview/development builds FINISHED. Razorpay direct authorization API returned HTTP400 BAD_REQUEST_ERROR (requested URL unavailable), although test-order creation succeeds.
+
+PostgreSQL17 compatibility rehearsal (15 November): all six existing Prisma migrations applied through the existing migration Docker image to a disposable PG17 database with btree_gist in extensions. Both resource_no_overlap and capacity_sessions_no_overlap constraints were present; six finished migration records verified. Test container removed. This is local version-compatibility evidence, not managed Supabase migration/TLS verification.
+
+The existing PostgreSQL integration suite also passed on a second disposable PG17 container: 48 passed, zero failures/skips; providers mocked. Container removed. This adds PG17 evidence without replacing the separate requirements for real checkout/webhook/device QA.
+
+17 November: Docker and local web restored after desktop downtime; read-only API/LAN/web/CORS checks pass. Android development and preview artifacts both downloadable (HTTP200). Supabase project ACTIVE_HEALTHY with zero security lints; database connection file still absent. iOS simulator-local build preparation is underway without Apple distribution signing.

@@ -1,11 +1,11 @@
-# PLAYZA deployment readiness — updated 15 November 2026
+# PLAYZA deployment readiness — updated 17 November 2026
 
 ## Current free/local-first status — 15 November 2026
 
 - Paid Render hosting is deferred by owner choice. Development is not blocked by billing.
 - Complete Docker PostgreSQL/Redis/API/worker stack runs; API/PG/Redis are healthy. LAN API readiness returned HTTP200 at http://10.6.85.212:18121/api/v2/ready. Metro/web serves HTTP200 at http://localhost:8081. These are local checks, not physical-device QA.
 - Supabase Free project PLAYZA Staging (`kebshsbehrajlrooykxn`, ap-south-1) was provisioned under the explicitly selected organization at quoted $0/month. Management SQL, restricted API-role schema grants, btree_gist 1.7 in extensions, and a temporary UUID/time-range exclusion constraint were verified. Security advisor returned zero lints after remediation. No PLAYZA tables/data were migrated; Prisma pooler/TLS connectivity requires the database password in a private staging secret store.
-- Initial signed Android preview/development builds failed on unused MMKV requiring an absent Nitro native module. MMKV was removed; mobile type/lint/profile checks, Expo dependency check and Doctor18/18 pass. Corrected EAS builds are in progress; no APK/device pass is claimed yet.
+- Initial signed Android preview/development builds failed on unused MMKV requiring an absent Nitro native module. MMKV was removed; mobile type/lint/profile checks, Expo dependency check and Doctor18/18 pass. Corrected Android development and standalone preview EAS builds FINISHED; both APK artifact endpoints returned200 on 17 November. Physical-device installation/runtime QA is unperformed.
 - Razorpay test-order creation passed; direct payment authorization endpoint returned400 BAD_REQUEST_ERROR. Capture/refund/real webhook delivery remain unverified.
 - Free Render+Supabase alternative is prepared in render.supabase.free.yaml, not applied. Free API sleep/SMTP restrictions and absence of a hosted worker remain. Production configuration is retained and production release is not cleared.
 
@@ -80,3 +80,9 @@ Final verification follow-up: all-platform export completed at `/private/tmp/pla
 ## Phase 2 superseding status
 
 The local-preparation evidence above is historical. Current staging evidence is in **STAGING_VALIDATION.md**. Docker builds and isolated Compose runtime/backup/recovery now pass. Render MCP access and EAS login/project linkage work; Android staging keystore exists. Hosted Render provisioning remains blocked by missing billing. Signed mobile releases, Apple signing, real capture/refund/webhook, push/maps/device QA and hosted alerts/load/recovery remain unverified. Security remediation removed all high/moderate findings: current backend production audit is zero, full backend tree five low and mobile fourteen low, propagated from unpatched deepmerge. Separate source branches are published; legacy main/service remain separate.
+
+PostgreSQL17 compatibility rehearsal (15 November): all six existing Prisma migrations applied through the existing migration Docker image to a disposable PG17 database with btree_gist in extensions. Both resource_no_overlap and capacity_sessions_no_overlap constraints were present; six finished migration records verified. Test container removed. This is local version-compatibility evidence, not managed Supabase migration/TLS verification.
+
+The existing PostgreSQL integration suite also passed on a second disposable PG17 container: 48 passed, zero failures/skips; providers mocked. Container removed. This adds PG17 evidence without replacing the separate requirements for real checkout/webhook/device QA.
+
+17 November runtime recheck: Docker Desktop restarted, cached API/worker/migration images built successfully, migrations job exited successfully, API/PG/Redis healthy and worker running. Local /live, /ready, /sports and LAN readiness all200; localhost8081 web200; untrusted browser Origin receives no CORS access. Existing data preserved.

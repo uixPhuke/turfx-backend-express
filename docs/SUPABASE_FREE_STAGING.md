@@ -48,3 +48,9 @@ Sources: [Pricing](https://supabase.com/pricing), [Free database-only project li
 Obtain/set the project database password through the Supabase dashboard and place the exact session-pooler DATABASE_URL in the backend staging secret store. Do not send it in chat. The connected management tools provide SQL access but do not return a database password or configure Data API settings. Management SQL success is not evidence that Prisma can connect over the pooler. Do not reconstruct Prisma migration bookkeeping through management SQL.
 
 Extension relocation was verified transactionally with a temporary UUID/time-range GiST exclusion constraint under public-only search_path; the temporary table was dropped on commit. This checks managed extension compatibility without creating application tables or claiming Prisma migrations ran.
+
+PostgreSQL17 compatibility rehearsal (15 November): all six existing Prisma migrations applied through the existing migration Docker image to a disposable PG17 database with btree_gist in extensions. Both resource_no_overlap and capacity_sessions_no_overlap constraints were present; six finished migration records verified. Test container removed. This is local version-compatibility evidence, not managed Supabase migration/TLS verification.
+
+The existing PostgreSQL integration suite also passed on a second disposable PG17 container: 48 passed, zero failures/skips; providers mocked. Container removed. This adds PG17 evidence without replacing the separate requirements for real checkout/webhook/device QA.
+
+17 November recheck: project remains ACTIVE_HEALTHY and security advisor returns zero lints. The .env.supabase connection file is still absent; no Prisma migrations or data import were attempted against the managed project.

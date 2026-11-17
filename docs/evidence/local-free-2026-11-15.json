@@ -8,7 +8,14 @@
     "redis": "healthy",
     "worker": "running",
     "lanReadiness200": true,
-    "lanApi": "http://10.6.85.212:18121/api/v2"
+    "lanApi": "http://10.6.85.212:18121/api/v2",
+    "readOnlySmoke": {
+      "live": 200,
+      "ready": 200,
+      "sports": 200,
+      "nosniffHeader": true,
+      "untrustedOriginCorsAccess": false
+    }
   },
   "supabase": {
     "project": "kebshsbehrajlrooykxn",
@@ -22,7 +29,8 @@
     "temporaryExclusionConstraintProbe": "passed",
     "securityAdvisors": 0,
     "prismaMigrationsApplied": false,
-    "reason": "Database password/session-pooler connection secret not available through connected management tools"
+    "reason": "Database password/session-pooler connection secret not available through connected management tools",
+    "recheckedDate": "2026-11-17"
   },
   "razorpay": {
     "mode": "test",
@@ -43,12 +51,75 @@
     "fix": "Removed unused react-native-mmkv, no application imports",
     "previewRetry": "a42f7f30-573b-4455-8380-5e980fcc607e",
     "developmentRetry": "cc6b9562-84eb-40ed-b4d5-7558ba43ce21",
-    "retryResult": "IN_PROGRESS",
-    "deviceQa": "not performed"
+    "retryResult": {
+      "development": "FINISHED",
+      "preview": "FINISHED"
+    },
+    "deviceQa": "not performed",
+    "developmentArtifact": {
+      "httpStatus": 200,
+      "bytes": 224475025,
+      "verifiedDate": "2026-11-17"
+    },
+    "previewArtifact": {
+      "httpStatus": 200,
+      "bytes": 123702471,
+      "verifiedDate": "2026-11-17"
+    },
+    "sourceStagingCommit": "fcb7454",
+    "archiveGitBase": "63e210ed355a6cfc1ef05f80ab50ef97b4c05370",
+    "archiveNote": "Working-directory archive includes MMKV removal; fix subsequently published on staging branch"
   },
   "render": {
     "previousFreePlan": "PLANNED, not applied",
     "supabaseAlternative": "render.supabase.free.yaml prepared locally; not remotely planned or applied"
   },
-  "production": "not deployed or cleared"
+  "production": "not deployed or cleared",
+  "localWeb": {
+    "url": "http://localhost:8081",
+    "httpStatus": 200,
+    "deviceQa": false
+  },
+  "mobileLocalVerification": {
+    "typecheck": "passed",
+    "lint": "passed",
+    "buildProfileTransportGuards": "passed",
+    "expoDependencyCheck": "passed",
+    "expoDoctor": "18/18 passed"
+  },
+  "postgres17Compatibility": {
+    "environment": "isolated disposable Docker database; not managed Supabase",
+    "migrationsApplied": 6,
+    "exclusionConstraints": [
+      "resource_no_overlap",
+      "capacity_sessions_no_overlap"
+    ],
+    "extensionSchema": "extensions",
+    "testContainerRemoved": true,
+    "integrationTests": {
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0,
+      "externalProviders": "mocked in this suite"
+    }
+  },
+  "runtimeRecheck2026-11-17": {
+    "dockerImages": "cached build passed",
+    "api": "healthy",
+    "postgres": "healthy",
+    "redis": "healthy",
+    "worker": "running",
+    "readOnlyApiSmoke": "passed live/ready/sports",
+    "lanReadiness": 200,
+    "localWeb": 200,
+    "untrustedCorsAccess": false,
+    "browserUi": "login/register/reset navigation rendered; no account creation or email sent"
+  },
+  "iosSimulator": {
+    "buildId": "ec6a99fa-49ca-4975-948c-41dc106bca66",
+    "profile": "simulator-local",
+    "status": "submitted",
+    "appleDistributionSigning": false,
+    "runtimeQa": "not performed; Xcode absent"
+  }
 }

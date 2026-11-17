@@ -30,4 +30,20 @@ Render's corrected free-only plan was accepted: Blueprint exs-dbsp9rec6qcc739pph
 
 Current local LAN endpoint is http://10.6.85.212:18121/api/v2 (15 November; update after network changes). LAN readiness returned 200. Android without a configured native Maps key uses the existing venue-list/external-map fallback rather than attempting an unconfigured native map.
 
-Supabase Free is also authorized as an optional separate staging PostgreSQL host. See SUPABASE_FREE_STAGING.md and render.supabase.free.yaml. Account access and managed-database verification remain pending; Docker remains the default complete environment. This alternative does not imply approval to apply the earlier Render-only plan.
+Supabase Free is also authorized as an optional separate staging PostgreSQL host. See SUPABASE_FREE_STAGING.md and render.supabase.free.yaml. Account access and management SQL are verified; Prisma database credentials and end-to-end verification remain pending; Docker remains the default complete environment. This alternative does not imply approval to apply the earlier Render-only plan.
+
+Read-only Docker smoke checks on 15 November: /live, /ready and /sports each returned200 with nosniff headers; an untrusted Origin received no Access-Control-Allow-Origin. Metro/web at http://localhost:8081 returned200. Web logs note push-token listeners are unsupported on web; this is not push-delivery verification.
+
+## Android installation and pending device QA
+
+The corrected development-local build cc6b9562-84eb-40ed-b4d5-7558ba43ce21 finished successfully. EAS artifact HEAD returned200, 224475025 bytes (universal development client; not production download-size evidence). Install from https://expo.dev/accounts/uixphuke/projects/playza/builds/cc6b9562-84eb-40ed-b4d5-7558ba43ce21 . It requires Metro. Preview-local bundles JavaScript for standalone internal testing but still requires the LAN backend. Build archives include the MMKV removal; source was subsequently published as mobile staging commit fcb7454. EAS metadata shows the original workspace's base Git commit because working-directory archives are permitted.
+
+Device QA remains unperformed: install on an actual Android phone, confirm same-LAN readiness in its browser, launch the correct PLAYZA staging app, and exercise synthetic login, discovery, booking/test checkout, cancellation, uploads and chat. Push requires working FCM device credentials; a build artifact does not verify notification delivery. No connected physical device, Android adb or iOS signing/provisioning has been verified here.
+
+If the computer's LAN address changes, update both private .env.local and EAS development/preview EXPO_PUBLIC_API_URL. A preview APK embeds its API URL and must be rebuilt after that change; development client JavaScript can be re-served by Metro. Do not change the production EAS environment to local HTTP. Run production commands with PLAYZA_LOCAL_API=0 and APP_VARIANT=production when a local shell has loaded .env.local.
+
+Standalone preview-local build a42f7f30-573b-4455-8380-5e980fcc607e FINISHED successfully: https://expo.dev/accounts/uixphuke/projects/playza/builds/a42f7f30-573b-4455-8380-5e980fcc607e . Both APK endpoints rechecked HTTP200 on17 November; preview123702471 bytes, development224475025 bytes. These are universal internal builds, not production download sizes. Physical-device QA remains pending.
+
+17 November browser UI smoke: login, registration and password-reset screens rendered and navigation returned to login. No email was sent, account created or authenticated flow claimed. Local development UI remains open at http://localhost:8081/login.
+
+iOS simulator: simulator-local extends simulator and opts into the same private-LAN API transport as Android local profiles. Run `eas build --platform ios --profile simulator-local`. It builds for Simulator without Apple distribution credentials, not for physical iPhone installation. Xcode/Simulator is absent on this computer, so launch QA is separate. Submitted build: https://expo.dev/accounts/uixphuke/projects/playza/builds/ec6a99fa-49ca-4975-948c-41dc106bca66 . See Expo simulator guidance: https://docs.expo.dev/build-reference/simulators/ .
