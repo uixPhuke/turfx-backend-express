@@ -2,6 +2,10 @@
 
 Development is authorized across all phases; no further phase approval checkpoints are required.
 
+## Accepted application boundaries — 17 November 2026
+
+See [APPLICATION_ARCHITECTURE.md](APPLICATION_ARCHITECTURE.md), the current cross-application decision: one customer Expo app for iOS/Android, a dedicated responsive Next.js owner dashboard, and a separate restricted Next.js admin dashboard, all using the existing shared API/PostgreSQL domain and identity. A user may retain CUSTOMER and OWNER roles; staff permissions remain venue-scoped. Both Next.js clients are planned, not implemented. Existing embedded Expo tools remain compatible. Future owner mode uses the same Expo app; no separate owner mobile application initially.
+
 ## Architecture
 
 Evolve the existing feature-based monolith. Keep the legacy API running on MongoDB while preparing PostgreSQL/Prisma alongside it. Do not silently switch persistence or alter existing data. The target contract is `prisma/schema.prisma`.
@@ -31,6 +35,8 @@ The reservation service uses serializable transactions, database overlap constra
 
 Validation: 93 legacy/security tests passed, including the added OTP integration tests; 18 PostgreSQL HTTP/concurrency/integrity tests passed. Type checking and lint passed. Migrations were applied only to the isolated local test instance. No legacy data was imported or deleted and no production persistence switch occurred.
 
-## Current limits
+## Historical limits — 5 November 2026
+
+This snapshot is retained as history; use DELIVERY_PLAN.md and APPLICATION_ARCHITECTURE.md for current application boundaries and progress.
 
 PostgreSQL payments/webhook receipt processing, reconciliation, outbox delivery, owner-management endpoints, migration/import tooling and the mobile application remain to be implemented. The existing MongoDB booking/payment flows are still the legacy API; the PostgreSQL engine does not silently replace them. Legacy withdrawals return unavailable until a provider-backed payout lifecycle exists. Clients must sign in again after the legacy token changes and store the replacement refresh token returned on every refresh.

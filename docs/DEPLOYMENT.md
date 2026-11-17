@@ -1,5 +1,11 @@
 # PLAYZA PostgreSQL deployment
 
+## Application deployment boundaries — accepted 17 November 2026
+
+[APPLICATION_ARCHITECTURE.md](APPLICATION_ARCHITECTURE.md) defines one customer Expo iOS/Android app, an independently deployed responsive Next.js owner dashboard, and a separate restricted Next.js admin dashboard. Both dashboards are planned and have not been deployed. Current infrastructure templates deploy the shared API/worker/datastores; they do not provision either Next.js client. Embedded Expo business/admin screens and web exports remain transitional, not final dashboards.
+
+Future web deployments need distinct origins/configuration, exact API origin allowlists, server-side session forwarding, host-only Secure HttpOnly cookies, CSRF checks and private-cache isolation. They use the existing API and may not access Prisma/PostgreSQL directly or duplicate payment/booking logic. Keep staging/production secrets and session scopes separate. This documentation change creates no hosting resources, changes no runtime/environment configuration and triggers no intentional production deployment. Existing release evidence and limitations below remain historical unless explicitly superseded in DELIVERY_PLAN.md.
+
 The `render.yaml` creates a separate API, notification/expiry worker, PostgreSQL 18 database and Redis instance in Oregon. The existing `turfx-backend-express` MongoDB service is not adopted or modified. Datastores allow private network connections only. Production rate limiting uses Redis; chat uses its Socket.IO adapter. Automatic application deploys are disabled until release verification.
 
 ## Verified locally

@@ -32,3 +32,17 @@
 - [ ] Staging evidence accepted; publish through a controlled rollout with health/error monitoring and rollback threshold.
 
 Unchecked items are release gates, not claims of failure. See DEPLOYMENT_READINESS.md for actual verification evidence.
+
+
+## Dedicated dashboard gates — architecture accepted 17 November 2026
+
+These are planned release gates, not completed dashboard functionality. See APPLICATION_ARCHITECTURE.md.
+
+- [ ] Dedicated responsive Next.js owner application and separate restricted Next.js admin application build and deploy independently.
+- [ ] Both use the existing shared API; neither contains Prisma/database access, duplicate identity storage, booking/pricing engines or payment verification.
+- [ ] CUSTOMER+OWNER identities retain customer access; pending/rejected owners cannot manage venues; staff navigation and every operation match active venue permissions.
+- [ ] Cross-venue access, inactive membership, non-admin direct URLs/API calls, role changes and revoked sessions are denied server-side.
+- [ ] Browser Secure HttpOnly host-only session cookies, origin/CSRF defenses, refresh concurrency, logout and private-cache isolation verified.
+- [ ] Owner revenue reporting distinguishes booking totals/currency from capture/refund/settlement evidence.
+- [ ] Mobile/desktop responsive QA and API contract/regression checks pass; deployments and real provider tests retain actual evidence.
+- [ ] Existing Expo owner/admin tools remain usable until web parity and a tested transition; future owner mode extends the same Expo app.

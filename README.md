@@ -2,6 +2,11 @@
 
 > PLAYZA backend under active development. The existing MongoDB API is retained while PostgreSQL/Prisma features are prepared and verified.
 
+
+## Accepted application architecture
+
+See [the application architecture](docs/APPLICATION_ARCHITECTURE.md) and [delivery plan](docs/DELIVERY_PLAN.md). Customer: one React Native + Expo app for iOS/Android. Owner: a dedicated responsive Next.js dashboard. Admin: a separate restricted Next.js dashboard. All use this shared API and PostgreSQL/Prisma business model, shared multi-role identity and venue-scoped permissions. The Next.js dashboards are planned; existing Expo business/admin tools remain compatible. Future owner mode belongs in the same Expo app, with no separate owner mobile application initially.
+
 ## Current development
 
 See [implementation decisions](docs/PLAYZA_IMPLEMENTATION.md) and [Prisma schema](prisma/schema.prisma). Run `npm run test:security`, `npm run db:validate`, `npm run typecheck`, and `npm run lint`. PostgreSQL integration tests require an isolated test instance via `PLAYZA_TEST_DATABASE_URL`. Run the separate PostgreSQL API with `npm run start:postgres`; its [API contract](docs/POSTGRES_API.md) documents implemented endpoints and limits. No production cutover has been performed.

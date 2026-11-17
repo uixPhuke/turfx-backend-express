@@ -7,13 +7,32 @@ Current release assessment: **local Docker is operational; free hosted staging i
 | Phase | Implementation state | Outstanding release work |
 |---|---|---|
 | 1 — Backend audit | Completed | Retain findings and trace changes |
-| 2 — Architecture/database | PostgreSQL/Prisma schema and six migrations implemented | Actual reconciled MongoDB data import/cutover |
+| 2 — Architecture/database | Shared PostgreSQL/Prisma model and six migrations implemented; three-application boundaries accepted | Actual reconciled MongoDB data import/cutover; dashboard contract review |
 | 3 — Foundation | Implemented and locally/CI verified | Hosted operational configuration |
 | 4 — Core backend | Implemented | End-to-end hosted QA |
 | 5 — Booking/payments | Local consistency, signatures, idempotency/refund tests pass | Actual capture/refund/webhook delivery |
-| 6 — Mobile | Connected app and all-platform bundles verified | Signed builds, push/maps credentials and physical-device QA |
+| 6 — Customer mobile | Connected Expo app; prior internal Android/iOS simulator builds recorded | Updated signed release builds, push/maps configuration and physical-device/store QA |
 | 7 — Community | Local chat/membership/persistence tests pass | Hosted multi-instance reconnect and device lifecycle QA |
-| 8 — Business/deployment | Owner/admin tools and deployment configuration prepared | Hosted staging, monitoring, managed backups/load validation and production rollout |
+| 8 — Business/deployment | API operations and transitional Expo owner/admin tools exist; deployment configuration prepared | Dedicated Next.js owner dashboard and separate Next.js admin dashboard not yet implemented; web auth/permissions QA, hosted validation and production rollout |
+
+## Accepted application delivery boundaries — 17 November 2026
+
+[APPLICATION_ARCHITECTURE.md](APPLICATION_ARCHITECTURE.md) is the accepted application architecture. Customer: one React Native + Expo application for iOS and Android. Owner: dedicated responsive Next.js dashboard. Admin: separate restricted Next.js dashboard. All three use the existing API, shared PostgreSQL database and backend business logic. Shared identities support CUSTOMER+OWNER; owner approval and venue-level staff permissions remain backend-controlled. Future owner mode extends the existing Expo app; no separate owner mobile application initially.
+
+Reviewed: Prisma UserRole/OwnerApplication/VenueMember, identity/session service, owner approval and scoped management/staff/analytics routes, Expo session/profile/business/admin clients. The two Next.js projects are not implemented. Existing business/admin screens are transitional functionality, not completed dedicated dashboards. Owner booking totals are not verified net revenue/settlements.
+
+| Work item | State | Dependency / completion evidence required |
+|---|---|---|
+| Architecture decision and compatibility policy | Accepted/documented | Documentation-only; no runtime changes |
+| Owner/admin endpoint and permission inventory | Required next | Verify each requested operation; STAFF is not automatically authorized by enum presence |
+| Responsive owner Next.js dashboard | Planned | Shared API/auth, owner verification states, active venue membership, operations and accurate revenue semantics |
+| Separate admin Next.js dashboard | Planned | Restricted access, API role enforcement, privileged-flow tests |
+| Browser session security | Planned | Server-side forwarding, Secure HttpOnly host-only cookies, CSRF/origin checks, serialized refresh, private-cache isolation |
+| Dashboard release validation | Not performed | Responsive QA, combined CUSTOMER+OWNER and staff cases, cross-venue/non-admin denial, staging CI/deploy evidence |
+| Transition from embedded Expo tools | Deferred | Web parity and validated release; preserve routes/deep links until then |
+| Owner mode in existing Expo app | Future | Reuse shared API/permissions after web priorities; no separate mobile app |
+
+Implement in that order while retaining the existing backend/mobile and free/local-first infrastructure. Do not rewrite auth/booking, create dashboard databases, migrate production data, or provision paid infrastructure for this documentation update. Existing payment/device/hosting/cutover release gates remain open; architecture acceptance does not mark Phase 8 complete.
 
 ## Release Phase 2 — staging deployment and validation
 
