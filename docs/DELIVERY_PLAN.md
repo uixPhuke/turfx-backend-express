@@ -114,3 +114,7 @@ The mobile UI/group/payment update was pushed to the existing `playza-staging-20
 The backend publication snapshot passes Prisma validation, TypeScript and ESLint, plus52/52 PostgreSQL regression tests (zero failed/skipped) after all existing migrations on a fresh disposable database. This supersedes the older test dates for the gallery/discovery/notification changes included here. Publication includes reusable gallery endpoints, public venue metadata, nearby discovery, wishlist details and authorized notification context required by the mobile client. No database/schema migration was added and no live service was deployed.
 
 UPI/QR live enablement and device payment validation remain external release work; the actual test checkout opened but UPI/QR was not exposed. See UPI_AND_QR_PAYMENTS.md. No production-readiness claim is added by a Git push.
+
+### Direct payment selection — 21 November 2026
+
+Mobile checkout now exposes PhonePe, Google Pay, Paytm UPI, QR, cards and other methods as selectable rows, preserving the main PLAYZA CTA. Each choice maps to its own Razorpay instrument preference; non-INR bookings exclude UPI. Local verify: 15 tests plus type/lint/variant checks pass. Browser selection and radio accessibility verified at phone width. Merchant-enabled UPI/QR, native app switching and end-to-end real payments remain external requirements; no new payment submitted.
