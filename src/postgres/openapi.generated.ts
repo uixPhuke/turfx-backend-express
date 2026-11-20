@@ -2579,6 +2579,64 @@ export const openApi = {
         }
       }
     },
+    "/owner/venues/{id}/media/order": {
+      "patch": {
+        "tags": [
+          "owner"
+        ],
+        "summary": "PATCH /owner/venues/{id}/media/order",
+        "operationId": "patch_owner_venues__id__media_order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient permission"
+          },
+          "409": {
+            "description": "State or uniqueness conflict"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "description": "Unexpected server error; includes a request ID"
+          },
+          "2XX": {
+            "description": "Successful response; 204 responses have no body"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
     "/owner/venues/{id}/media/{mediaId}": {
       "delete": {
         "tags": [

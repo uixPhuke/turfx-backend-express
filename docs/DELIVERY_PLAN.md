@@ -72,3 +72,45 @@ The existing PostgreSQL integration suite also passed on a second disposable PG1
 17 November iOS native result: simulator-local build ec6a99fa-49ca-4975-948c-41dc106bca66 FINISHED successfully. Build page: https://expo.dev/accounts/uixphuke/projects/playza/builds/ec6a99fa-49ca-4975-948c-41dc106bca66 . This is a simulator archive, not a signed physical-device IPA or App Store submission. Xcode/Simulator is absent locally; runtime QA remains unperformed. With Xcode installed, use `npx eas-cli build:run --platform ios --latest` to install the simulator build.
 
 The consolidated current release record is RELEASE_VALIDATION_2026-11-17.md, including completed native builds, fresh audit snapshots and remaining external requirements.
+
+
+## Reference UI implementation — 17 November 2026
+
+Customer home, venue details, slot calendar, payment summary/ticket, timeline, chats/invites, profile and nearby map were rebuilt around the supplied phone interiors. Shared responsive components preserve the lime/stone/ink palette and actual API behavior. Public venue discovery now returns safe hourly-price, rating and booking-count summaries, verified by the existing PostgreSQL suite (48 passed). No schema migration was introduced.
+
+Local UI QA exercised sign-in, selection/availability, a synthetic hold and cancellation, authenticated synthetic QR ticket, day filtering, favorites, chat search/invites, support and live keyless maps. Browser findings corrected: nested buttons, empty text children, cancelled Upcoming entries, venue/device date mismatch and narrow booking-price padding. Mobile variant/type/lint checks and final Android/iOS/web bundle exports passed. Backend Prisma/type/lint checks passed; schema validation used a placeholder URL, not a managed database connection.
+
+Full visual/native release sign-off remains open: keyless OSM map differs from the custom illustrated reference; exact portraits/individual venue assets are unavailable; real privacy policy URL and native Maps configuration/device QA remain required. See mobile `design-qa.md` and `docs/ui-qa/` for evidence and severity. Earlier signed binaries and CI builds predate the redesign; no new signed build, deployment, payment capture/refund or store submission is claimed. UI changes remain in the working codebase, with no commit/push in this continuation.
+
+
+## Owner gallery update — 18 November 2026
+
+Multiple photo selection, per-photo results/retry, saved previews, cover/reordering and confirmed removal are implemented in the existing Expo management flow against the shared API. Gallery limit20 is enforced transactionally; no migration was added. Owner venue responses include ordered public photo metadata and PATCH `/owner/venues/:id/media/order` accepts the complete unique ID list. See [OWNER_PHOTO_MANAGEMENT.md](OWNER_PHOTO_MANAGEMENT.md) for limits, permissions, actual Cloudinary results, the 50-test PostgreSQL run and device/timeout limitations. This does not mark the planned Next.js dashboards or full owner platform release complete.
+
+## UX clarity and nearby discovery — 18 November 2026
+
+Implemented compact labeled owner/chat actions, standard secondary buttons, detailed wishlist and notification cards, permission-driven nearby discovery and real-map centering. Preserved existing Razorpay Standard Checkout for eligible UPI Intent / desktop QR and server verification. Local PostgreSQL regression suite now 52/52; mobile checks include five photo and three location tests. See [UX clarity validation](UX_CLARITY_2026_11_18.md) for exact scope and remaining physical-device/provider checks. No staging/production readiness claim is added.
+
+19 November follow-through: final mobile verify and Android/iOS/web bundle export passed; restored local Docker stack healthy with worker running. Location in-flight logout/session-expiry privacy edge case fixed and regression tested. New signed binaries and physical-device/provider validation remain outstanding.
+
+## Compact secondary actions and chat — 19 November 2026
+
+Secondary controls now use content width and icon/text actions; primary sign-in/save/booking styling is preserved. Profile photo, team members/invites and owner applications have explicit compact actions and focused forms. Chat now has dated bubbles, a keyboard-aware bottom composer and separate message options. Mobile verify and final TypeScript/ESLint passed. Browser320px checks covered forms, per-team invite state and send/reopen in a single-member local synthetic QA team. See docs/COMPACT_ACTIONS_AND_CHAT.md; native keyboard/device certification is still pending.
+
+## Group-chat journey and UI clarity — 20 November 2026
+
+Implemented dedicated New group and Invite members screens, create-to-chat navigation, group-header info navigation, readable member/admin rows and confirmed member actions; removed inline group forms and self-demotion. Reviewed access-aware business shortcuts, staff role selection, game cancel/leave confirmation, connection messaging and monetary precision. Mobile verify passes with10 upload/location/money tests. Detailed actual verification and untested native/multi-account paths: docs/GROUP_CHAT_UX.md. No blanket production/physical-device certification.
+
+Android/iOS/web bundle export succeeded20 November: `/private/tmp/playza-groups-ux-final-1120`. These are bundle/static outputs, not signed APK/IPA releases. API, PostgreSQL and Redis healthy; worker running. UI changes remain local.
+
+## UPI/QR checkout preparation — 21 November 2026
+
+Implemented clear payment-method descriptions, INR UPI-priority checkout configuration, test/live flow separation and required iOS UPI discovery schemes.14 mobile tests/type/lint/variant checks pass. Actual Razorpay test checkout opened20 November; only cards/netbanking/wallet appeared, so live UPI/QR remains unverified and merchant/device enablement is still required. No payment submitted or live keys used. See docs/UPI_AND_QR_PAYMENTS.md.
+
+## GitHub publication — 21 November 2026
+
+The mobile UI/group/payment update was pushed to the existing `playza-staging-20261106` branch as [9c403c0](https://github.com/uixPhuke/playza-mobile/commit/9c403c0). Isolated mobile publication verification passed with14 tests, TypeScript, ESLint and variant checks; final Android/iOS/web export passed. No fresh dependency install or newly signed native binary is implied.
+
+The backend publication snapshot passes Prisma validation, TypeScript and ESLint, plus52/52 PostgreSQL regression tests (zero failed/skipped) after all existing migrations on a fresh disposable database. This supersedes the older test dates for the gallery/discovery/notification changes included here. Publication includes reusable gallery endpoints, public venue metadata, nearby discovery, wishlist details and authorized notification context required by the mobile client. No database/schema migration was added and no live service was deployed.
+
+UPI/QR live enablement and device payment validation remain external release work; the actual test checkout opened but UPI/QR was not exposed. See UPI_AND_QR_PAYMENTS.md. No production-readiness claim is added by a Git push.

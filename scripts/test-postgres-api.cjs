@@ -153,6 +153,13 @@ test("serves only approved venues and configured sports without leaking owner id
   assert.equal(list.status, 200);
   assert.equal(list.body.data.length, 1);
   assert.equal(list.body.data[0].ownerId, undefined);
+  assert.deepEqual(list.body.data[0].hourlyFrom, {
+    amount: 5000,
+    currency: "INR",
+  });
+  assert.equal(list.body.data[0].rating, null);
+  assert.equal(list.body.data[0].bookingCount, 0);
+  assert.equal(list.body.data[0].facility_venue, undefined);
   const hidden = await request(server).get(`/api/v2/venues/${pending.id}`);
   assert.equal(hidden.status, 404);
   const detail = await request(server).get(`/api/v2/venues/${venue.id}`);
@@ -161,6 +168,54 @@ test("serves only approved venues and configured sports without leaking owner id
     detail.body.data.facility_venue[0].resource_facility[0].id,
     resource.id,
   );
+});
+test("nearby discovery validates coordinates and ranks actual active venues", async () => {
+  const original = await db.venue.findUnique({ where: { id: venue.id } });
+  await db.venue.update({
+    where: { id: venue.id },
+    data: { latitude: 19.076, longitude: 72.8777 },
+  });
+  const near = await request(server).get("/api/v2/venues").query({
+    latitude: 19.076,
+    longitude: 72.8777,
+    radiusKm: 1,
+    sportId: sport.id,
+  });
+  assert.equal(near.status, 200);
+  assert.equal(near.body.data[0].id, venue.id);
+  assert.ok(near.body.data[0].distanceKm < 0.01);
+  assert.equal(near.body.pagination.total, 1);
+  const far = await request(server)
+    .get("/api/v2/venues")
+    .query({ latitude: 0, longitude: 0, radiusKm: 1, sportId: sport.id });
+  assert.equal(far.body.data.length, 0);
+  const second = await request(server).get("/api/v2/venues").query({
+    latitude: 19.076,
+    longitude: 72.8777,
+    radiusKm: 1,
+    sportId: sport.id,
+    page: 2,
+    limit: 1,
+  });
+  assert.equal(second.body.pagination.total, 1);
+  assert.equal(second.body.data.length, 0);
+  assert.equal(
+    (await request(server).get("/api/v2/venues").query({ latitude: 19 }))
+      .status,
+    400,
+  );
+  assert.equal(
+    (
+      await request(server)
+        .get("/api/v2/venues")
+        .query({ latitude: 91, longitude: 0 })
+    ).status,
+    400,
+  );
+  await db.venue.update({
+    where: { id: venue.id },
+    data: { latitude: original.latitude, longitude: original.longitude },
+  });
 });
 let bookingId;
 test("image uploads require venue management and reject disguised files", async () => {
@@ -204,6 +259,136 @@ test("image uploads require venue management and reject disguised files", async 
     await db.venueMedia.count({ where: { id: valid.body.data.id } }),
     0,
   );
+});
+test("venue gallery ordering is complete, tenant-scoped and visible to customers", async () => {
+  const rows = await Promise.all(
+    [0, 1, 2].map((position) =>
+      db.venueMedia.create({
+        data: {
+          venueId: venue.id,
+          publicId: randomUUID(),
+          url: `https://example.test/gallery-${position}.jpg`,
+          position,
+        },
+      }),
+    ),
+  );
+  const path = `/api/v2/owner/venues/${venue.id}/media/order`;
+  const ids = rows.map((row) => row.id).reverse();
+  assert.equal(
+    (await request(server).patch(path).send({ mediaIds: ids })).status,
+    401,
+  );
+  assert.equal(
+    (
+      await request(server)
+        .patch(`/api/v2/owner/venues/${randomUUID()}/media/order`)
+        .set("Authorization", bearer())
+        .send({ mediaIds: ids })
+    ).status,
+    403,
+  );
+  assert.equal(
+    (
+      await request(server)
+        .patch(path)
+        .set("Authorization", bearer())
+        .send({ mediaIds: [ids[0], ids[0], ids[1]] })
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await request(server)
+        .patch(path)
+        .set("Authorization", bearer())
+        .send({ mediaIds: [ids[0], randomUUID(), ids[2]] })
+    ).status,
+    409,
+  );
+  assert.equal(
+    (
+      await request(server)
+        .patch(path)
+        .set("Authorization", bearer())
+        .send({ mediaIds: ids.slice(1) })
+    ).status,
+    409,
+  );
+  const saved = await request(server)
+    .patch(path)
+    .set("Authorization", bearer())
+    .send({ mediaIds: ids });
+  assert.equal(saved.status, 200);
+  assert.deepEqual(
+    saved.body.data.map((row) => row.id),
+    ids,
+  );
+  const owner = await request(server)
+    .get("/api/v2/owner/venues")
+    .set("Authorization", bearer());
+  const ownerPhotos = owner.body.data.find(
+    (row) => row.id === venue.id,
+  ).venueMedia_venue;
+  assert.deepEqual(
+    ownerPhotos.map((row) => row.id),
+    ids,
+  );
+  assert.equal(ownerPhotos[0].publicId, undefined);
+  const detail = await request(server).get(`/api/v2/venues/${venue.id}`);
+  assert.equal(detail.body.data.venueMedia_venue[0].url, rows[2].url);
+  const discover = await request(server)
+    .get("/api/v2/venues")
+    .query({ sportId: sport.id });
+  assert.equal(
+    discover.body.data.find((row) => row.id === venue.id).venueMedia_venue[0]
+      .url,
+    rows[2].url,
+  );
+  await db.venueMedia.deleteMany({ where: { id: { in: ids } } });
+});
+test("parallel uploads cannot exceed the venue gallery limit", async () => {
+  const gallery = await db.venue.create({
+    data: {
+      ownerId: userId,
+      name: "Gallery limit fixture",
+      description: "Synthetic gallery limit test",
+      address: {},
+      timezone: "UTC",
+      latitude: 0,
+      longitude: 0,
+    },
+  });
+  await db.venueMember.create({
+    data: { venueId: gallery.id, userId, role: "OWNER" },
+  });
+  await db.venueMedia.createMany({
+    data: Array.from({ length: 19 }, (_, position) => ({
+      venueId: gallery.id,
+      publicId: randomUUID(),
+      url: "https://example.test/limit.jpg",
+      position,
+    })),
+  });
+  const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0]);
+  const upload = () =>
+    request(server)
+      .post(`/api/v2/owner/venues/${gallery.id}/media`)
+      .set("Authorization", bearer())
+      .attach("image", png, {
+        filename: "limit.png",
+        contentType: "image/png",
+      });
+  const results = await Promise.all([upload(), upload(), upload()]);
+  assert.equal(results.filter((result) => result.status === 201).length, 1);
+  assert.equal(results.filter((result) => result.status === 409).length, 2);
+  assert.equal(
+    await db.venueMedia.count({ where: { venueId: gallery.id } }),
+    20,
+  );
+  const before = uploaded.length;
+  assert.equal((await upload()).status, 409);
+  assert.equal(uploaded.length, before);
 });
 test("management changes enforce tenant scope and preserve future bookings", async () => {
   const changed = await request(server)
@@ -508,5 +693,92 @@ test("signing out deactivates registered push devices", async () => {
   assert.equal(
     (await db.deviceToken.findUnique({ where: { token: push } })).isActive,
     false,
+  );
+});
+
+test("wishlist metadata and notification context remain customer-scoped", async () => {
+  const login = await request(server)
+    .post("/api/v2/auth/login")
+    .send({ email, password: "New-PLAYZA-fixture-password-456" });
+  assert.equal(login.status, 200);
+  token = login.body.data.accessToken;
+  await request(server)
+    .put(`/api/v2/favourites/${venue.id}`)
+    .set("Authorization", bearer());
+  const saved = await request(server)
+    .get("/api/v2/favourites")
+    .set("Authorization", bearer());
+  const row = saved.body.data.find((f) => f.venue.id === venue.id);
+  assert.ok(row);
+  assert.equal(row.venue.ownerId, undefined);
+  assert.ok(row.venue.facility_venue.length);
+  const booking = await db.booking.findFirst({ where: { customerId: userId } });
+  assert.ok(booking);
+  const n = await db.notification.create({
+    data: {
+      receiverId: userId,
+      kind: "booking.confirmed",
+      title: "Fixture notice",
+      body: "Booking update",
+      data: { bookingId: booking.id },
+    },
+  });
+  const own = await request(server)
+    .get("/api/v2/notifications")
+    .set("Authorization", bearer());
+  const enriched = own.body.data.find((item) => item.id === n.id);
+  assert.equal(enriched.booking.id, booking.id);
+  assert.ok(enriched.createdAt);
+  assert.ok(enriched.booking.resource.facility.venue.name);
+  const other = await db.user.create({
+    data: {
+      email: `${randomUUID()}@example.test`,
+      name: "Other notice account",
+      passwordHash: "synthetic-no-login",
+    },
+  });
+  await db.booking.update({
+    where: { id: booking.id },
+    data: { customerId: other.id },
+  });
+  try {
+    const injected = await db.notification.create({
+      data: {
+        receiverId: userId,
+        kind: "booking.updated",
+        title: "Foreign reference",
+        body: "No private details",
+        data: { bookingId: booking.id },
+      },
+    });
+    const check = await request(server)
+      .get("/api/v2/notifications")
+      .set("Authorization", bearer());
+    assert.equal(
+      check.body.data.find((item) => item.id === injected.id).booking,
+      null,
+    );
+  } finally {
+    await db.booking.update({
+      where: { id: booking.id },
+      data: { customerId: userId },
+    });
+  }
+  const foreign = await db.notification.create({
+    data: {
+      receiverId: other.id,
+      kind: "test",
+      title: "Private",
+      body: "Private",
+      data: {},
+    },
+  });
+  assert.equal(
+    (
+      await request(server)
+        .post(`/api/v2/notifications/${foreign.id}/read`)
+        .set("Authorization", bearer())
+    ).status,
+    404,
   );
 });

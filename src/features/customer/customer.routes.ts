@@ -51,8 +51,37 @@ export function customerRoutes(db: PrismaClient, authenticate: RequestHandler) {
         },
         include: {
           venue: {
-            include: {
-              venueMedia_venue: { orderBy: { position: "asc" }, take: 1 },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              address: true,
+              latitude: true,
+              longitude: true,
+              timezone: true,
+              venueMedia_venue: {
+                orderBy: [{ position: "asc" }, { id: "asc" }],
+                take: 1,
+                select: { url: true },
+              },
+              facility_venue: {
+                where: { isActive: true },
+                select: {
+                  resource_facility: {
+                    where: { isActive: true },
+                    select: {
+                      currency: true,
+                      slotMinutes: true,
+                      resourceSport_resource: {
+                        select: { sport: { select: { name: true } } },
+                      },
+                      pricingRule_resource: {
+                        select: { amountMinor: true, configuration: true },
+                      },
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -94,12 +123,56 @@ export function customerRoutes(db: PrismaClient, authenticate: RequestHandler) {
     res.status(204).end();
   });
   router.get("/notifications", authenticate, async (_req, res) => {
+    const rows = await db.notification.findMany({
+      where: { receiverId: res.locals.identity.user.id },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: 100,
+    });
+    const bookingIds = rows.flatMap((row) => {
+      const data = row.data as Record<string, unknown> | null;
+      return typeof data?.bookingId === "string" &&
+        z.uuid().safeParse(data.bookingId).success
+        ? [data.bookingId]
+        : [];
+    });
+    const bookings = bookingIds.length
+      ? await db.booking.findMany({
+          where: {
+            id: { in: bookingIds },
+            customerId: res.locals.identity.user.id,
+          },
+          select: {
+            id: true,
+            reference: true,
+            startsAt: true,
+            endsAt: true,
+            status: true,
+            totalMinor: true,
+            currency: true,
+            resource: {
+              select: {
+                name: true,
+                facility: {
+                  select: { venue: { select: { name: true, timezone: true } } },
+                },
+              },
+            },
+          },
+        })
+      : [];
     res.json({
       success: true,
-      data: await db.notification.findMany({
-        where: { receiverId: res.locals.identity.user.id },
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        take: 100,
+      data: rows.map((row) => {
+        const data = row.data as Record<string, unknown> | null;
+        return {
+          id: row.id,
+          title: row.title,
+          body: row.body,
+          kind: row.kind,
+          createdAt: row.createdAt,
+          readAt: row.readAt,
+          booking: bookings.find((b) => b.id === data?.bookingId) || null,
+        };
       }),
     });
   });

@@ -1,3 +1,4 @@
+import { nearbyVenues } from "../features/customer/discovery";
 import { openApi } from "./openapi.generated";
 import { staffRoutes } from "../features/platform/staff.routes";
 import { reviewRoutes } from "../features/reviews/review.routes";
@@ -43,7 +44,7 @@ const bookingContext = {
               venueMedia_venue: {
                 select: { url: true },
                 take: 1,
-                orderBy: { position: "asc" },
+                orderBy: [{ position: "asc" }, { id: "asc" }],
               },
             },
           },
@@ -294,9 +295,25 @@ export function createPostgresApp(db: PrismaClient, options: ApiOptions) {
       .extend({
         search: z.string().trim().max(100).optional(),
         sportId: id.optional(),
+        latitude: z.coerce.number().min(-90).max(90).optional(),
+        longitude: z.coerce.number().min(-180).max(180).optional(),
+        radiusKm: z.coerce.number().min(1).max(100).default(25),
       })
+      .refine(
+        (v) => (v.latitude === undefined) === (v.longitude === undefined),
+        { message: "Latitude and longitude are required together" },
+      )
       .parse(req.query);
+    const nearby =
+      input.latitude !== undefined && input.longitude !== undefined
+        ? await nearbyVenues(db, {
+            ...input,
+            latitude: input.latitude,
+            longitude: input.longitude,
+          })
+        : null;
     const where: Prisma.VenueWhereInput = {
+      ...(nearby ? { id: { in: nearby.rows.map((row) => row.id) } } : {}),
       status: "APPROVED",
       isActive: true,
       deletedAt: null,
@@ -328,7 +345,7 @@ export function createPostgresApp(db: PrismaClient, options: ApiOptions) {
       db.venue.count({ where }),
       db.venue.findMany({
         where,
-        skip: (input.page - 1) * input.limit,
+        skip: nearby ? 0 : (input.page - 1) * input.limit,
         take: input.limit,
         orderBy: [{ createdAt: "desc" }, { id: "asc" }],
         select: {
@@ -340,17 +357,93 @@ export function createPostgresApp(db: PrismaClient, options: ApiOptions) {
           longitude: true,
           timezone: true,
           venueMedia_venue: {
-            orderBy: { position: "asc" },
+            orderBy: [{ position: "asc" }, { id: "asc" }],
             take: 1,
             select: { url: true },
+          },
+          facility_venue: {
+            where: { isActive: true },
+            select: {
+              resource_facility: {
+                where: { isActive: true },
+                select: {
+                  _count: {
+                    select: {
+                      booking_resource: {
+                        where: { status: { in: ["CONFIRMED", "COMPLETED"] } },
+                      },
+                    },
+                  },
+                  currency: true,
+                  slotMinutes: true,
+                  pricingRule_resource: { select: { amountMinor: true } },
+                },
+              },
+            },
           },
         },
       }),
     ]);
+    const ratings = venues.length
+      ? await db.review.groupBy({
+          by: ["venueId"],
+          where: {
+            venueId: { in: venues.map((v) => v.id) },
+            isVisible: true,
+            deletedAt: null,
+          },
+          _avg: { rating: true },
+        })
+      : [];
     res.json({
       success: true,
-      data: venues,
-      pagination: { page: input.page, limit: input.limit, total },
+      data: (nearby
+        ? venues.sort(
+            (a, b) =>
+              nearby.rows.findIndex((r) => r.id === a.id) -
+              nearby.rows.findIndex((r) => r.id === b.id),
+          )
+        : venues
+      ).map(({ facility_venue, ...venue }) => {
+        const prices = facility_venue.flatMap((f) =>
+          f.resource_facility.flatMap((r) =>
+            r.pricingRule_resource.map((p) => ({
+              amount: Math.round((p.amountMinor * 60) / r.slotMinutes),
+              currency: r.currency,
+            })),
+          ),
+        );
+        const currency = prices[0]?.currency;
+        const lowest = prices
+          .filter((p) => p.currency === currency)
+          .sort((a, b) => a.amount - b.amount)[0];
+        return {
+          ...venue,
+          ...(nearby
+            ? {
+                distanceKm: nearby.rows.find((row) => row.id === venue.id)
+                  ?.distance,
+              }
+            : {}),
+          hourlyFrom: lowest || null,
+          rating:
+            ratings.find((r) => r.venueId === venue.id)?._avg.rating ?? null,
+          bookingCount: facility_venue.reduce(
+            (count, f) =>
+              count +
+              f.resource_facility.reduce(
+                (n, r) => n + r._count.booking_resource,
+                0,
+              ),
+            0,
+          ),
+        };
+      }),
+      pagination: {
+        page: input.page,
+        limit: input.limit,
+        total: nearby?.total ?? total,
+      },
     });
   });
   router.get("/venues/:id", async (req, res) => {
@@ -370,7 +463,7 @@ export function createPostgresApp(db: PrismaClient, options: ApiOptions) {
         latitude: true,
         longitude: true,
         venueMedia_venue: {
-          orderBy: { position: "asc" },
+          orderBy: [{ position: "asc" }, { id: "asc" }],
           select: { url: true, position: true },
         },
         facility_venue: {
@@ -388,7 +481,9 @@ export function createPostgresApp(db: PrismaClient, options: ApiOptions) {
                 capacity: true,
                 slotMinutes: true,
                 currency: true,
-                pricingRule_resource: { select: { amountMinor: true } },
+                pricingRule_resource: {
+                  select: { amountMinor: true, configuration: true },
+                },
                 resourceSport_resource: {
                   select: {
                     sport: { select: { id: true, name: true, slug: true } },
@@ -565,7 +660,13 @@ export function createPostgresApp(db: PrismaClient, options: ApiOptions) {
       requestId: res.locals.requestId,
     });
   };
-  app.use((_req, res) => res.status(404).json({ success: false, message: "Endpoint not found", requestId: res.locals.requestId }));
+  app.use((_req, res) =>
+    res.status(404).json({
+      success: false,
+      message: "Endpoint not found",
+      requestId: res.locals.requestId,
+    }),
+  );
   app.use(errors);
   return app;
 }

@@ -57,6 +57,10 @@ export function platformRoutes(db: PrismaClient, authenticate: RequestHandler) {
           deletedAt: null,
         },
         include: {
+          venueMedia_venue: {
+            select: { id: true, url: true, position: true },
+            orderBy: [{ position: "asc" }, { id: "asc" }],
+          },
           venueMember_venue: {
             where: { userId: res.locals.identity.user.id, isActive: true },
             select: { role: true },

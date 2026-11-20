@@ -62,6 +62,15 @@ export function mediaRoutes(
         res.locals.identity.user.id,
         id.parse(req.params.id),
       );
+      if (
+        (await db.venueMedia.count({
+          where: { venueId: id.parse(req.params.id) },
+        })) >= 20
+      )
+        throw new ReservationError(
+          409,
+          "A venue can have up to 20 photos. Remove a photo before adding another.",
+        );
       next();
     },
     upload,
@@ -72,14 +81,74 @@ export function mediaRoutes(
       const image = await provider!.upload(req.file!.buffer, key);
       let row;
       try {
-        row = await db.venueMedia.create({
-          data: { venueId, publicId: image.publicId, url: image.url },
+        row = await db.$transaction(async (tx) => {
+          await tx.$queryRaw`SELECT id FROM "Venue" WHERE id=${venueId}::uuid FOR UPDATE`;
+          const photos = await tx.venueMedia.findMany({
+            where: { venueId },
+            select: { position: true },
+          });
+          if (photos.length >= 20)
+            throw new ReservationError(
+              409,
+              "A venue can have up to 20 photos. Remove a photo before adding another.",
+            );
+          return tx.venueMedia.create({
+            data: {
+              venueId,
+              publicId: image.publicId,
+              url: image.url,
+              position:
+                photos.reduce(
+                  (max, photo) => Math.max(max, photo.position),
+                  -1,
+                ) + 1,
+            },
+          });
         });
       } catch (error) {
         await provider!.remove(image.publicId).catch(() => {});
         throw error;
       }
       res.status(201).json({ success: true, data: row });
+    },
+  );
+  router.patch(
+    "/owner/venues/:id/media/order",
+    authenticate,
+    async (req, res) => {
+      const venueId = id.parse(req.params.id);
+      await platform.manage(res.locals.identity.user.id, venueId);
+      const { mediaIds } = z
+        .strictObject({ mediaIds: z.array(id).min(1).max(100) })
+        .parse(req.body);
+      if (new Set(mediaIds).size !== mediaIds.length)
+        throw new ReservationError(400, "Each photo must appear exactly once");
+      const photos = await db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Venue" WHERE id=${venueId}::uuid FOR UPDATE`;
+        const current = await tx.venueMedia.findMany({
+          where: { venueId },
+          select: { id: true },
+        });
+        if (
+          current.length !== mediaIds.length ||
+          current.some((photo) => !mediaIds.includes(photo.id))
+        )
+          throw new ReservationError(
+            409,
+            "The gallery changed. Refresh and try again.",
+          );
+        for (const [position, mediaId] of mediaIds.entries())
+          await tx.venueMedia.update({
+            where: { id: mediaId },
+            data: { position },
+          });
+        return tx.venueMedia.findMany({
+          where: { venueId },
+          select: { id: true, url: true, position: true },
+          orderBy: [{ position: "asc" }, { id: "asc" }],
+        });
+      });
+      res.json({ success: true, data: photos });
     },
   );
   router.delete(

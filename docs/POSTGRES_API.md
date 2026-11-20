@@ -96,3 +96,8 @@ Remaining: complete edit/moderation/organizer workflows; customer cancellation/r
 - `/conversations`, messages and read markers
 
 Socket events: `conversation:join`, `message:send`, `message:new` and typing. Every room join/send validates the current session and membership. Uploaded image files are limited to 8 MB and accepted JPEG/PNG/WebP signatures; the provider decodes and transforms actual files. All owner/admin permissions are checked on the backend.
+
+
+## Owner gallery update — 18 November 2026
+
+Multiple photo selection, per-photo results/retry, saved previews, cover/reordering and confirmed removal are implemented in the existing Expo management flow against the shared API. Gallery limit20 is enforced transactionally; no migration was added. Owner venue responses include ordered public photo metadata and PATCH `/owner/venues/:id/media/order` accepts the complete unique ID list. See [OWNER_PHOTO_MANAGEMENT.md](OWNER_PHOTO_MANAGEMENT.md) for limits, permissions, actual Cloudinary results, the 50-test PostgreSQL run and device/timeout limitations. This does not mark the planned Next.js dashboards or full owner platform release complete.
